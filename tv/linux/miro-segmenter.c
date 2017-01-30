@@ -34,6 +34,7 @@
 #include <unistd.h>    /* XXX Windows? */
 
 #include "libavformat/avformat.h"
+#include "libavcodec/avcodec.h"
 
 static AVStream *add_output_stream(AVFormatContext *output_format_context, AVStream *input_stream) {
     AVCodecContext *input_codec_context;
@@ -74,7 +75,7 @@ static AVStream *add_output_stream(AVFormatContext *output_format_context, AVStr
             output_codec_context->sample_rate = input_codec_context->sample_rate;
             output_codec_context->channels = input_codec_context->channels;
             output_codec_context->frame_size = input_codec_context->frame_size;
-            if ((input_codec_context->block_align == 1 && input_codec_context->codec_id == CODEC_ID_MP3) || input_codec_context->codec_id == CODEC_ID_AC3) {
+            if ((input_codec_context->block_align == 1 && input_codec_context->codec_id == AV_CODEC_ID_MP3) || input_codec_context->codec_id == AV_CODEC_ID_AC3) {
                 output_codec_context->block_align = 0;
             }
             else {
