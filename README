@@ -1,6 +1,29 @@
+
 ========
  README
 ========
+
+About this Fork
+===============
+
+I have no idea why development died some time ago, but I still use Miro, 
+I still like it more than all other podcast players. But it's getting 
+increasingly difficult to get it up and running.
+
+Things I plan to do:
+* Apply necessary patches to compile it
+* Apply some bugfixes and patches I use on my version
+* Try to change it to gstreamer-1.0
+    (currently it requires webkit-gtk built without audio/video to run,
+    gstreamer-1.0 from webkit collides with gstreamer-0.10 from miro)
+
+And some maybe:
+* use Python 3
+* use newer webkit
+
+
+----
+
 
 This repository holds source code for several components of Miro, the
 open and free Internet TV platform.  For more information about Miro,
