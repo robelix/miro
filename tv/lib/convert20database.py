@@ -43,12 +43,7 @@ import cPickle
 from cStringIO import StringIO
 import logging
 import sys
-
-try:
-    import sqlite3
-except ImportError:
-    from pysqlite2 import dbapi2 as sqlite3
-
+import sqlite3
 from miro import databaseupgrade
 from miro import databasesanity
 from miro import dbupgradeprogress

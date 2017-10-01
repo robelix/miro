@@ -57,12 +57,7 @@ import time
 import os
 import sys
 from cStringIO import StringIO
-
-try:
-    import sqlite3
-except ImportError:
-    from pysqlite2 import dbapi2 as sqlite3
-
+import sqlite3
 from miro import app
 from miro import crashreport
 from miro import convert20database
@@ -1083,7 +1078,7 @@ class LiveStorage(signals.SignalEmitter):
         for id_list_chunk in util.split_values_for_sqlite(id_list):
             sql = StringIO()
             sql.write("SELECT %s " % (', '.join(column_names),))
-            sql.write("FROM %s WHERE id IN (%s)" % (schema.table_name, 
+            sql.write("FROM %s WHERE id IN (%s)" % (schema.table_name,
                 ', '.join('?' for i in xrange(len(id_list_chunk)))))
 
             self.cursor.execute(sql.getvalue(), id_list_chunk)
