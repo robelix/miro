@@ -835,7 +835,7 @@ class Item(MetadataItemBase, iconcache.IconCacheOwnerMixin):
         return cls.make_view(
             "not is_container_item AND "
             "(deleted IS NULL or not deleted) AND "
-            "(is_file_item OR rd.main_item_id=item.id) AND " 
+            "(is_file_item OR rd.main_item_id=item.id) AND "
             "NOT item.file_type='other'",
             joins={'feed': 'item.feed_id=feed.id',
                    'remote_downloader as rd': 'item.downloader_id=rd.id'})
@@ -1443,7 +1443,6 @@ class Item(MetadataItemBase, iconcache.IconCacheOwnerMixin):
 
     def unset_watched(self):
         """Act like this item has never been watched by the user."""
-        self.resume_time = 0
         self.watched_time = self.last_watched = None
         self.signal_change()
 
@@ -1505,6 +1504,7 @@ class Item(MetadataItemBase, iconcache.IconCacheOwnerMixin):
     def mark_item_completed(self):
         self.confirm_db_thread()
         self.play_count += 1
+        self.mark_watched()
         self.signal_change()
 
     def mark_item_skipped(self):
