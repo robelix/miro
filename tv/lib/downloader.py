@@ -59,7 +59,7 @@ class DownloadStateManager(object):
     downloader.
 
     Commands to the downloader is batched and sent every second.  This is
-    based on the premise that commands for a particular download id can 
+    based on the premise that commands for a particular download id can
     be completely superceded by a subsequent command, with the exception
     of a pause/resume pair.  For example, a stop command will completely
     supecede a pause command, so if the 2 are sent in quick succession
@@ -163,7 +163,7 @@ class DownloadStateManager(object):
                 return
             # HACK: When we pause and resume we currently send a download
             # command, then a restore downloader command which doesn't
-            # do anything.  This also breaks our general assumption that a 
+            # do anything.  This also breaks our general assumption that a
             # current command can completely supercede any previous queued
             # command so if we see it disable it.  I'm not actually
             # sure why we'd want to send a restore command in this case.
@@ -186,7 +186,7 @@ class DownloadStateManager(object):
 
     def startup_downloader(self):
         """Initialize the downloaders.
-    
+
         This method currently does 2 things.  It deletes any stale files
         self in Incomplete Downloads, then it restarts downloads that have
         been restored from the database.  It must be called before any
@@ -196,7 +196,7 @@ class DownloadStateManager(object):
         # Now that the daemon has started, we can process updates.
         self.send_initial_updates()
         self.start_updates()
-    
+
     def shutdown_downloader(self, callback=None):
         if self.daemon_starter:
             self.daemon_starter.shutdown(callback)
@@ -411,7 +411,7 @@ class RemoteDownloader(DDBObject):
     def get_content_type(self):
         if is_magnet_uri(self.url):
             self.content_type = u'application/x-magnet'
-            return 
+            return
         httpclient.grab_headers(self.url, self.on_content_type,
                                 self.on_content_type_error)
 
@@ -1096,6 +1096,8 @@ def get_downloader_for_item(item):
     channel_name = unicode_to_filename(item.get_channel_title(True))
     if not channel_name:
         channel_name = None
+    if url is None:
+        return None
     if url.startswith(u'file://'):
         path = get_file_url_path(url)
         try:
@@ -1123,5 +1125,3 @@ def reset_download_stats():
     app.db.cursor.execute("UPDATE remote_downloader SET %s" %
                           ', '.join(setters))
     app.db.connection.commit()
-
-
