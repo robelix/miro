@@ -29,8 +29,6 @@ apt-get install \
     libsqlite3-dev \
     libtag1-dev \
     libtorrent-rasterbar6 \
-    libwebkit-dev \
-    libwebkitgtk-3.0-0 \
     pkg-config \
     python-gconf \
     python-gst0.10 \
@@ -39,5 +37,4 @@ apt-get install \
     python-mutagen \
     python-pycurl \
     python-pyrex \
-    python-webkit \
     zlib1g-dev

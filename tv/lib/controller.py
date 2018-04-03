@@ -41,7 +41,6 @@ from miro import crashreport
 from miro import downloader
 from miro import eventloop
 from miro.gtcache import gettext as _
-from miro import httpauth
 from miro import httpclient
 from miro import messages
 from miro import prefs
@@ -99,8 +98,6 @@ class Controller:
         logging.info("Shutting down libCURL thread")
         httpclient.stop_thread()
         httpclient.cleanup_libcurl()
-        logging.info("Writing HTTP passwords")
-        httpauth.write_to_file()
         logging.info("Shutting down event loop thread")
         eventloop.shutdown()
         logging.info("Saving cached ItemInfo objects")

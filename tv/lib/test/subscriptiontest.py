@@ -291,12 +291,6 @@ class Testfind_subscribe_links(MiroTestCase):
                 'description': u'My\ufffdBlog'}] # fffd is the ? character
         )
 
-    def test_site_links(self):
-        url = ('http://subscribe.getdemocracy.com/site.php' +
-               '?url1=http%3A//www.mychannelguide.com/')
-        self.assertEquals(subscription.find_subscribe_links(url),
-                [{'type': 'site', 'url': 'http://www.mychannelguide.com/'}])
-
     def test_download_links(self):
         url = ('http://subscribe.getdemocracy.com/download.php' +
                '?url1=http%3A//www.myblog.com/videos/cats.ogm')

@@ -375,7 +375,6 @@ from miro.feed import (SearchFeedImpl, DirectoryWatchFeedImpl,
 from miro.feed import ManualFeedImpl
 from miro.folder import (HideableTab, ChannelFolder, PlaylistFolder,
                          PlaylistFolderItemMap)
-from miro.guide import ChannelGuide
 from miro.item import Item, FileItem, DeviceItem, SharingItem
 from miro.iconcache import IconCache
 from miro.metadata import MetadataStatus, MetadataEntry
@@ -836,25 +835,6 @@ class TabOrderSchema(DDBObjectSchema):
     def handle_malformed_tab_ids(row):
         return []
 
-class ChannelGuideSchema(DDBObjectSchema):
-    klass = ChannelGuide
-    table_name = 'channel_guide'
-    fields = DDBObjectSchema.fields + [
-        ('url', SchemaURL(noneOk=True)),
-        ('allowedURLs', SchemaList(SchemaURL())),
-        ('updated_url', SchemaURL(noneOk=True)),
-        ('favicon', SchemaURL(noneOk=True)),
-        ('title', SchemaString(noneOk=True)),
-        ('userTitle', SchemaString(noneOk=True)),
-        ('icon_cache_id', SchemaInt(noneOk=True)),
-        ('firstTime', SchemaBool()),
-        ('store', SchemaInt()),
-    ]
-
-    @staticmethod
-    def handle_malformed_allowedURLs(row):
-        return []
-
 class ThemeHistorySchema(DDBObjectSchema):
     klass = ThemeHistory
     table_name = 'theme_history'
@@ -1006,7 +986,7 @@ object_schemas = [
     ScraperFeedImplSchema,
     SearchFeedImplSchema, DirectoryFeedImplSchema, DirectoryWatchFeedImplSchema,
     SearchDownloadsFeedImplSchema, RemoteDownloaderSchema,
-    ChannelGuideSchema, ManualFeedImplSchema,
+    ManualFeedImplSchema,
     PlaylistSchema, HideableTabSchema, ChannelFolderSchema, PlaylistFolderSchema,
     PlaylistItemMapSchema, PlaylistFolderItemMapSchema,
     TabOrderSchema, ThemeHistorySchema, DisplayStateSchema, GlobalStateSchema,

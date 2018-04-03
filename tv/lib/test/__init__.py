@@ -47,7 +47,6 @@ import unittest
 from miro.test.importtest import *
 from miro.test.conversionstest import *
 from miro.test.devicestest import *
-from miro.test.flashscrapertest import *
 from miro.test.unicodetest import *
 from miro.test.schematest import *
 from miro.test.storedatabasetest import *

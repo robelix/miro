@@ -69,7 +69,6 @@ from miro.plat.associate import associate_protocols
 
 from miro.frontends.widgets.gtk.widgetset import Rect
 from miro.frontends.widgets.gtk import gtkmenus
-from miro.frontends.widgets.gtk import webkitgtkhacks
 from miro.frontends.widgets.gtk import gtkdirectorywatch
 
 import logging
@@ -145,7 +144,6 @@ class LinuxApplication(Application):
         os.environ["PULSE_PROP_media.role"] = "video"
 
         gobject.threads_init()
-        self._setup_webkit()
         associate_protocols(self._get_command())
         gtkdirectorywatch.GTKDirectoryWatcher.install()
         self.menubar = gtkmenus.MainWindowMenuBar()
@@ -178,17 +176,8 @@ class LinuxApplication(Application):
         logging.info("PyGObject version: %s", gtk.ver)
         logging.info("PyGtk version:     %s", gtk.pygtk_version)
 
-    def _setup_webkit(self):
-        cookie_path = get_cookie_path()
-        webkitgtkhacks.setup_cookie_storage(cookie_path)
-        webkitgtkhacks.add_cookie('dmusic_download_manager_enabled',
-                                  '1.0.3',
-                                  '.amazon.com',
-                                  '/',
-                                  3600 * 365 * 10) # 10 years
-
     def _get_command(self):
-        # The command is always "miro" but the 
+        # The command is always "miro" but the
         # the argument varies according to branding
         themeName = app.config.get(prefs.THEME_NAME)
         if themeName is not None:
@@ -209,9 +198,11 @@ class LinuxApplication(Application):
             self.update_autostart(value)
 
     def startup_ui(self):
+        logging.debug('linux application.py LinuxApplication.startup_ui start')
         sys.excepthook = self.exception_handler
         Application.startup_ui(self)
         call_on_ui_thread(bonjour.check_bonjour_install)
+        logging.debug('linux application.py LinuxApplication.startup_ui end')
 
     def _set_default_icon(self):
         # set the icon so that it doesn't flash when the window is
@@ -234,6 +225,7 @@ class LinuxApplication(Application):
         return ico_path
 
     def build_window(self):
+        logging.debug('linux application.py LinuxApplication.build_window start')
         self._set_default_icon()
         Application.build_window(self)
         self.window.connect('save-dimensions', self.set_main_window_dimensions)
@@ -285,6 +277,7 @@ class LinuxApplication(Application):
 
         # handle media keys
         self.mediakeyhandler = mediakeys.get_media_key_handler(self.window)
+        logging.debug('linux application.py LinuxApplication.build_window done')
 
     def quit_ui(self):
         try:

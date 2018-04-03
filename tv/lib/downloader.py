@@ -49,7 +49,6 @@ from miro import httpclient
 from miro import models
 from miro import prefs
 from miro.plat.utils import samefile, unicode_to_filename
-from miro import flashscraper
 from miro import fileutil
 from miro import util
 from miro.fileobject import FilenameType
@@ -568,9 +567,10 @@ class RemoteDownloader(DDBObject):
     def run_downloader(self):
         """This is the actual download thread.
         """
-        flashscraper.try_scraping_url(self.url, self._run_downloader)
+        # still needed?
 
     def _run_downloader(self, url, content_type=None, title=None):
+        # still needed?
         if not self.id_exists():
             # we got deleted while we were doing the flash scraping
             return
@@ -596,7 +596,7 @@ class RemoteDownloader(DDBObject):
         else:
             self.state = u'failed'
             self.short_reason_failed = _('File not found')
-            self.reason_failed = _('Flash URL Scraping Error')
+            self.reason_failed = _('xlash URL Scraping Error')
         self.signal_change()
 
     def pause(self):

@@ -155,9 +155,6 @@ playback_manager = None
 # manages watched folders
 watched_folder_manager = None
 
-# manages stores
-store_manager = None
-
 # keeps track of frontend states
 widget_state = None
 

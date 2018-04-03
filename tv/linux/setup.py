@@ -206,10 +206,10 @@ def parse_pkg_config(command, components, options_dict=None):
             'libraries': [],
             'extra_compile_args': []
         }
-    
+
     commandLine = "%s --cflags --libs %s" % (command, components)
     output = get_command_output(commandLine).strip()
-    
+
     for comp in output.split():
         prefix, rest = comp[:2], comp[2:]
         if prefix == '-I':
@@ -218,7 +218,7 @@ def parse_pkg_config(command, components, options_dict=None):
             options_dict['library_dirs'].append(rest)
         elif prefix == '-l':
             options_dict['libraries'].append(rest)
-            
+
             # Silence warning on `GtkItemFactoryCallback` declaration.
             if rest.startswith('gtk-'):
                 options_dict['extra_compile_args'].append('-Wno-strict-prototypes')
@@ -278,14 +278,6 @@ fixedliststore_ext = \
           ],
           **parse_pkg_config('pkg-config',
                              'pygobject-2.0 gtk+-2.0 glib-2.0 gthread-2.0')
-    )
-
-webkitgtkhacks_ext = \
-    Extension("miro.frontends.widgets.gtk.webkitgtkhacks",
-        [os.path.join(portable_frontend_dir, 'widgets', 'gtk',
-                      'webkitgtkhacks.pyx')],
-        **parse_pkg_config('pkg-config',
-            'gtk+-2.0 webkit-1.0')
     )
 
 #### Build the data_files list ####
@@ -568,7 +560,6 @@ ext_modules.append(xlib_ext)
 ext_modules.append(pygtkhacks_ext)
 ext_modules.append(namecollation_ext)
 ext_modules.append(fixedliststore_ext)
-ext_modules.append(webkitgtkhacks_ext)
 
 script_files += [os.path.join(platform_dir, 'miro'),
                  os.path.join(platform_dir, 'miro.real')

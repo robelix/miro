@@ -24,7 +24,7 @@ which will install dependencies for some systems.  Note that these
 scripts may be out of date and that you must run them with
 administrative priveliges.
 
-RUN THEM AT YOUR OWN RISK!  
+RUN THEM AT YOUR OWN RISK!
 
 Please send in patches to the scripts if you encounter issues.
 
@@ -45,9 +45,7 @@ Build requirements:
   http://www.cosc.canterbury.ac.nz/greg.ewing/python/Pyrex/
 * PyGTK >= 2.0 - http://www.pygtk.org/
 * pygobject >= 2.0 - http://ftp.gnome.org/pub/GNOME/sources/pygobject/
-* libwebkit dev files - http://webkit.org/ (might work with lower
-  versions--untested)
-* libsoup dev files - http://live.gnome.org/LibSoup 
+* libsoup dev files - http://live.gnome.org/LibSoup
 
 Runtime requirements:
 
@@ -58,9 +56,6 @@ Runtime requirements:
 * PyGTK >= 2.0 - http://www.pygtk.org/
 * pygobject >= 2.0 - http://ftp.gnome.org/pub/GNOME/sources/pygobject/
 * pycairo - http://cairographics.org/pycairo/
-* libwebkit >= 1.1.15 - http://webkit.org/
-  (might work with lower versions--untested)
-* pywebkitgtk >= 1.1.5 - http://live.gnome.org/PyWebKitGtk
 * libsoup - http://live.gnome.org/LibSoup
 * gconf and python bindings
 * gstreamer >= 0.10.22 - http://gstreamer.freedesktop.org/
@@ -73,7 +68,7 @@ Runtime requirements:
 * libtorrent-rasterbar python bindings
 * libcurl - http://curl.haxx.se/libcurl/
 * libcurl python bindings - http://curl.haxx.se/libcurl/python/
-* mutagen - http://pypi.python.org/pypi/mutagen/1.12 
+* mutagen - http://pypi.python.org/pypi/mutagen/1.12
 * libavahi-compat-libdnssd1
 
 If you discover that there are other requirements, let us know!
@@ -92,7 +87,7 @@ See https://develop.participatoryculture.org/index.php/LinuxBuildDocs
 for more information on building and executing the Linux platform code.
 The information at this URL is considered the authoritative source.
 
-For more command-line options including how to set preferences on the command 
+For more command-line options including how to set preferences on the command
 and what preferences are available, do::
 
    ./run.sh --help

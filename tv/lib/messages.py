@@ -48,7 +48,6 @@ from miro.plat import resources
 from miro import app
 from miro import displaytext
 from miro import models
-from miro import guide
 from miro import search
 from miro import prefs
 from miro import util
@@ -278,7 +277,7 @@ class ExportSubscriptions(BackendMessage):
 
 class RenameObject(BackendMessage):
     """Tell the backend to rename a feed/playlist/folder.
-    
+
     :param type: ``feed``, ``playlist``, ``feed-folder`` or
                  ``playlist-folder``
     :param id: id of the object to rename
@@ -392,18 +391,6 @@ class DeletePlaylist(BackendMessage):
     def __init__(self, id_, is_folder):
         self.id = id_
         self.is_folder = is_folder
-
-class DeleteSite(BackendMessage):
-    """Delete an external channel guide.
-    """
-    def __init__(self, id_):
-        self.id = id_
-
-class NewGuide(BackendMessage):
-    """Create a new channel guide.
-    """
-    def __init__(self, url):
-        self.url = util.to_uni(url)
 
 class NewFeed(BackendMessage):
     """Creates a new feed.
@@ -529,7 +516,7 @@ class CheckVersion(BackendMessage):
 
 class Search(BackendMessage):
     """Search a search engine with a search term.
-    
+
     The backend will send a SearchComplete message.
     """
     def __init__(self, searchengine_id, terms):
@@ -839,7 +826,7 @@ class DeviceEject(BackendMessage):
 
 class DownloadSharingItems(BackendMessage):
     """Ask the backend to download some items from a remote share into the
-    main database. 
+    main database.
     """
     def __init__(self, item_infos):
         self.item_infos = item_infos
@@ -869,7 +856,7 @@ class SetNetLookupEnabled(BackendMessage):
         self.enabled = enabled
 
 class ClogBackend(BackendMessage):
-    """Dev message: intentionally clog the backend for a specified number of 
+    """Dev message: intentionally clog the backend for a specified number of
     seconds.
     """
     def __init__(self, n=0):
@@ -1064,36 +1051,9 @@ class PlaylistInfo(object):
         else:
             self.parent_id = playlist_obj.folder_id
 
-class GuideInfo(object):
-    """Tracks the state of a channel guide
-
-    :param name: channel name
-    :param id: object id
-    :param url: URL for the guide
-    :param allowed_urls: URLs that should be also considered part of the guide
-    :param default: is this the default channel guide?
-    :param favicon: the favicon for the guide
-    :param faviconIsDefault: true if the guide is using the default site
-                             icon and not a favicon from the web
-    """
-    def __init__(self, guide):
-        self.name = guide.get_title()
-        self.id = guide.id
-        self.url = guide.get_url()
-        self.default = guide.is_default()
-        self.store = bool(guide.store)
-        self.visible = guide.is_visible()
-        self.allowed_urls = guide.allowedURLs
-        self.favicon = guide.get_favicon_path()
-        self.faviconIsDefault = not (guide.icon_cache and
-                                     guide.icon_cache.get_filename())
-
-    def __repr__(self):
-        return '<miro.messages.GuideInfo(%i) "%s">' % (self.id, self.name)
-
 class WatchedFolderInfo(object):
     """Tracks the state of a watched folder.
-    
+
     :param id: ID of the channel
     :param path: Path to the folder being watched
     :param visible: Is the watched folder shown on the tab list?
@@ -1102,60 +1062,6 @@ class WatchedFolderInfo(object):
         self.id = channel.id
         self.path = channel.dir
         self.visible = channel.visible
-
-class GuideList(FrontendMessage):
-    """Sends the frontend the initial list of channel guides
-
-    :param default_guide: The Default channel guide
-    :param added_guides: list added channel guides
-    :param invisible_guides: list of guides which aren't visible (used by
-                             StoreManager)
-    """
-    def __init__(self, guides):
-        default_guides = [g for g in guides if g.default]
-        if not default_guides:
-            # The problem here is that Miro persists guides and it's possible
-            # for it to have a default channel guide persisted, but when you
-            # set the channel guide via the DTV_CHANNELGUIDE_URL, then there's
-            # no default guide.  So we generate one here.  Bug #11027.
-            logging.warning("Generating a new guide")
-            cg = guide.ChannelGuide(util.to_uni(app.config.get(
-                        prefs.CHANNEL_GUIDE_URL)))
-            cg_info = GuideInfo(cg)
-            default_guides = [cg_info]
-        elif len(default_guides) > 1:
-            logging.warning("Multiple default guides!  Picking the first one.")
-            default_guides = [default_guides[0]]
-        self.default_guide = default_guides[0]
-        self.added_guides = [g for g in guides if not g.default]
-        self.root_expanded = False
-
-class StoreList(FrontendMessage):
-    """Sends the frontend the initial list of stores"""
-    def __init__(self, stores):
-        self.hidden_stores = [s for s in stores if not s.visible]
-        self.visible_stores = [s for s in stores if s.visible]
-        self.root_expanded = False
-
-class StoresChanged(FrontendMessage):
-    """Informs the frontend that the visible store list has changed.
-
-    :param added: GuideInfo object for each added store.
-                  The list will be in the same order that they were added.
-    :param changed: The list of GuideInfo for each changed store.
-    :param removed: list of ids for each store that was hidden.
-    """
-    def __init__(self, added, changed, removed):
-        self.added = added
-        self.changed = changed
-        self.removed = removed
-
-class SetGuideVisible(BackendMessage):
-    """Changes if a guide is visible in the tab list or not.
-    """
-    def __init__(self, id_, visible):
-        self.id = id_
-        self.visible = visible
 
 class TabList(FrontendMessage):
     """Sends the frontend the current list of channels and playlists
@@ -1191,10 +1097,10 @@ class TabList(FrontendMessage):
         self.expanded_folders.add(folder_id)
 
 class TabsChanged(FrontendMessage):
-    """Informs the frontend that the channel list or playlist list has been 
+    """Informs the frontend that the channel list or playlist list has been
     changed.
 
-    :param type: ``feed``, ``playlist`` or ``guide``
+    :param type: ``feed``, ``playlist``
     :param added: ChannelInfo/PlaylistInfo object for each added tab.  The
                   list will be in the same order that the tabs were added.
     :param changed: list of ChannelInfo/PlaylistInfos for each changed tab.
@@ -1386,7 +1292,7 @@ class ConversionTaskInfo(object):
         self.output_size_guess = task.get_output_size_guess()
 
 class ConversionTasksList(FrontendMessage):
-    """Send the current list of running and pending conversion tasks to the 
+    """Send the current list of running and pending conversion tasks to the
        frontend.
     """
     def __init__(self, running_tasks, pending_tasks, finished_tasks):
@@ -1529,7 +1435,7 @@ class NotifyUser(FrontendMessage):
         self.title = title
         self.body = body
         self.notify_type = notify_type
-    
+
 class SearchComplete(FrontendMessage):
     """Notifies the backend that the search was complete.
     """
@@ -1570,7 +1476,7 @@ class DisplayInfo(object):
             self.selection = display.selection
             self.sort_state = display.sort_state
             self.last_played_item_id = display.last_played_item_id
-            # shallow-copy attributes that store lists, dicts, and sets so
+            # shallow-copy attributes that dicts, and sets so
             # that changing the database object doesn't change the DisplayInfo
             self.active_filters = copy.copy(display.active_filters)
         else:
@@ -1587,7 +1493,6 @@ class GlobalInfo(object):
     """
     def __init__(self, global_info):
         self.item_details_expanded = global_info.item_details_expanded
-        self.guide_sidebar_expanded = global_info.guide_sidebar_expanded
         self.tabs_width = global_info.tabs_width
 
 class ViewInfo(object):
@@ -1597,7 +1502,7 @@ class ViewInfo(object):
         self.key = key
         if view is not None:
             self.scroll_position = view.scroll_position
-            # shallow-copy attributes that store lists, dicts, and sets so
+            # shallow-copy attributes that dicts, and sets so
             # that changing the database object doesn't change the DisplayInfo
             self.columns_enabled = copy.copy(view.columns_enabled)
             self.column_widths = copy.copy(view.column_widths)

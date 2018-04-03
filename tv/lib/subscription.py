@@ -51,7 +51,6 @@ from miro import httpclient
 from miro import singleclick
 from miro import feed
 from miro import folder
-from miro import guide
 
 
 SUBSCRIBE_HOSTS = ('subscribe.getdemocracy.com', 'subscribe.getmiro.com')
@@ -231,27 +230,6 @@ class Subscriber(object):
                     f.set_expiration(u'feed', expiry_time)
             if parent_folder is not None:
                 f.set_folder(parent_folder)
-            return True
-        else:
-            return False
-
-    def handle_site(self, site_dict, parent_folder):
-        """
-        Site subscriptions look like::
-
-            {
-            'type': 'site',
-            'url': URL of the site
-            'title': name of the site (optional),
-            }
-        """
-        assert parent_folder is None, "no folders in site section"
-        url = site_dict['url']
-        if guide.get_guide_by_url(url) is None:
-            new_guide = guide.ChannelGuide(url, [u'*'])
-            title = site_dict.get('title')
-            if title is not None and title != url:
-                new_guide.set_title(title)
             return True
         else:
             return False

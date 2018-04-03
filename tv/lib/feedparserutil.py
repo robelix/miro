@@ -40,7 +40,6 @@ from miro.clock import clock
 from miro import eventloop
 from miro import feedparser
 from miro import filetypes
-from miro import flashscraper
 from miro import util
 
 # values from feedparser dicts that don't have to convert in
@@ -102,9 +101,6 @@ def _yahoo_hack(feedparser_entries):
             if mimetype is not None:
                 entry['enclosures'] = [{'url': util.to_uni(url),
                                         'type': util.to_uni(mimetype)}]
-            elif flashscraper.is_maybe_flashscrapable(url):
-                entry['enclosures'] = [{'url': util.to_uni(url),
-                                        'type': util.to_uni("video/flv")}]
 
 def sanitizeHTML(htmlSource, encoding):
     return feedparser.sanitizeHTML(htmlSource, encoding)

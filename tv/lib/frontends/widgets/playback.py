@@ -45,7 +45,7 @@ from miro.frontends.widgets import dialogs
 from miro.frontends.widgets.widgetstatestore import WidgetStateStore
 
 class PlaybackManager (signals.SignalEmitter):
-    
+
     def __init__(self):
         signals.SignalEmitter.__init__(self)
         self.player = None
@@ -60,7 +60,7 @@ class PlaybackManager (signals.SignalEmitter):
         self.is_paused = False
         self.is_suspended = False
         self.shuffle = False
-        self.repeat = WidgetStateStore.get_repeat_off() 
+        self.repeat = WidgetStateStore.get_repeat_off()
         self.open_finished = False
         self.open_successful = False
         self.playlist = None
@@ -99,14 +99,14 @@ class PlaybackManager (signals.SignalEmitter):
         self.volume = volume
         if self.player is not None:
             self.player.set_volume(volume)
-    
+
     def set_presentation_mode(self, mode):
         self.presentation_mode = mode
         if self.is_playing:
             if not self.is_fullscreen:
                 self.fullscreen()
             self.video_display.renderer.update_for_presentation_mode(mode)
-    
+
     def toggle_paused(self):
         """Pause a playing item, play a paused item, and soft_fail otherwise."""
         if not self.is_playing:
@@ -149,10 +149,6 @@ class PlaybackManager (signals.SignalEmitter):
         if display and hasattr(display, 'controller'):
             controller = display.controller
             controller.scroll_to_item(playing_item, manual=True, recenter=True)
-        else:
-            #17488 - GuideDisplay doesn't have a controller
-            logging.debug("current display doesn't have a controller - "
-                    "can't switch to")
 
     def start(self, start_id, item_list,
             presentation_mode='fit-to-bounds', force_resume=False):
@@ -212,15 +208,15 @@ class PlaybackManager (signals.SignalEmitter):
         self.previous_left_widget = splitter.left
         splitter.remove_left()
         splitter.set_left_width(0)
-        app.display_manager.push_display(self.video_display)            
-    
+        app.display_manager.push_display(self.video_display)
+
     def finish_attached_playback(self, unselect=True):
         if (self.video_display is not None and
                 app.display_manager.current_display is self.video_display):
             app.display_manager.pop_display(unselect)
         app.widgetapp.window.splitter.set_left_width(self.previous_left_width)
         app.widgetapp.window.splitter.set_left(self.previous_left_widget)
-    
+
     def prepare_detached_playback(self):
         self.emit('will-play-detached')
         detached_window_frame = app.config.get(prefs.DETACHED_WINDOW_FRAME)
@@ -234,7 +230,7 @@ class PlaybackManager (signals.SignalEmitter):
         self.align.add(self.video_display.widget)
         self.detached_window.set_content_widget(self.align)
         self.detached_window.show()
-    
+
     def finish_detached_playback(self):
         # this prevents negative x and y values from getting saved
         coords = str(self.detached_window.get_frame())
@@ -246,7 +242,7 @@ class PlaybackManager (signals.SignalEmitter):
         self.detached_window.close(False)
         self.detached_window.destroy()
         self.detached_window = None
-    
+
     def schedule_update(self):
         def notify_and_reschedule():
             if self.update_timeout is not None:
@@ -304,7 +300,7 @@ class PlaybackManager (signals.SignalEmitter):
         if self.force_resume:
             return True
 
-        if(self.shuffle == True or 
+        if(self.shuffle == True or
            self.repeat != WidgetStateStore.get_repeat_off()):
            return False
 
@@ -480,7 +476,7 @@ class PlaybackManager (signals.SignalEmitter):
         self.player.play()
         self.set_playback_rate(3.0)
         self.notify_update()
-        
+
     def fast_backward(self):
         self.player.play()
         self.set_playback_rate(-3.0)
@@ -501,7 +497,7 @@ class PlaybackManager (signals.SignalEmitter):
         if self.is_playing and not self.is_paused:
             self.player.pause()
         self.is_suspended = True
-    
+
     def resume(self):
         if self.is_playing and not self.is_paused:
             self.player.play()
@@ -579,7 +575,7 @@ class PlaybackManager (signals.SignalEmitter):
             # the backend and frontend use different names for this
             typ = 'unplayable'
         self._finish_setup_player(item_info, typ, volume)
-    
+
     def _finish_setup_player(self, item_info, item_type, volume):
         if item_type == 'audio':
             if self.is_playing and self.video_display is not None:
@@ -594,7 +590,7 @@ class PlaybackManager (signals.SignalEmitter):
             self.is_playing = True
             self.player.setup(item_info, volume)
         elif item_type in ('video', 'unplayable'):
-            # We send items with type 'other' to the video display to be able 
+            # We send items with type 'other' to the video display to be able
             # to open them using the 'play externally' display - luc.
             if self.is_playing and self.video_display is None:
                 # if we were previously playing an audio file, stop.
@@ -740,7 +736,7 @@ class PlaybackManager (signals.SignalEmitter):
         if not self.is_fullscreen:
             self.is_fullscreen = True
             self.video_display.enter_fullscreen()
-    
+
     def exit_fullscreen(self):
         if self.is_fullscreen:
             self.is_fullscreen = False
@@ -755,14 +751,14 @@ class PlaybackManager (signals.SignalEmitter):
         else:
             self.switch_to_attached_playback()
         app.menu_manager.update_menus('playback-changed')
-            
+
     def switch_to_attached_playback(self):
         self.cancel_update_timer()
         self.video_display.prepare_switch_to_attached_playback()
         self.finish_detached_playback()
         self.prepare_attached_playback()
         self.schedule_update()
-    
+
     def switch_to_detached_playback(self):
         self.cancel_update_timer()
         self.video_display.prepare_switch_to_detached_playback()
@@ -797,10 +793,10 @@ class PlaybackManager (signals.SignalEmitter):
 
     def item_resume_policy(self, item_info):
         """
-        There are two kinds of resume results we need. 
-        ItemRenderer.should_resume_item() calculates whether an item should 
+        There are two kinds of resume results we need.
+        ItemRenderer.should_resume_item() calculates whether an item should
         display a resume button and PlaybackManager.should_resume() calculates
-        whether an item should resume when clicked. This method calculates 
+        whether an item should resume when clicked. This method calculates
         the general resume policy for an item which these other methods then
         use to calculate their final result.
         """
@@ -809,7 +805,7 @@ class PlaybackManager (signals.SignalEmitter):
         # from a remote share is either audio or video (no podcast).
         # Figure out if its from a library or feed. Also, if feed_url
         # is None don't consider it a podcast.
-        if (item_info.remote or 
+        if (item_info.remote or
            not item_info.feed_id or
           (item_info.feed_url and
           (item_info.feed_url.startswith('dtv:manualFeed') or
@@ -822,7 +818,7 @@ class PlaybackManager (signals.SignalEmitter):
                 resume = app.config.get(prefs.RESUME_MUSIC_MODE)
         else:
             resume =  app.config.get(prefs.RESUME_PODCASTS_MODE)
-        
+
         result = (item_info.is_playable
                and item_info.resume_time > 0
                and resume

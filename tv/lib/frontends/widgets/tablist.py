@@ -84,6 +84,7 @@ class TabListView(widgetset.TableView):
     draws_selection = True
 
     def __init__(self, renderer, table_model_class=None):
+        logging.debug('tablist.py TabListView.__init__ start')
         if table_model_class is None:
             table_model_class = widgetset.TreeTableModel
         table_model = table_model_class('object', 'boolean', 'integer')
@@ -101,26 +102,32 @@ class TabListView(widgetset.TableView):
         self.set_background_color(style.TAB_LIST_BACKGROUND_COLOR)
         self.set_fixed_height(False)
         self.set_auto_resizes(True)
+        logging.debug('tablist.py TabListView.__init__ end')
 
     def append_tab(self, tab_info):
+        logging.debug('tablist.py TabListView.append_tab start')
         """Add a new tab with no parent."""
         return self.model.append(tab_info, False, -1)
 
     def insert_tab(self, iter_, tab_info):
+        logging.debug('tablist.py TabListView.insert_tab start')
         """Insert a new tab before iter_."""
         return self.model.insert_before(iter_, tab_info, False, -1)
 
     def append_child_tab(self, parent_iter, tab_info):
+        logging.debug('tablist.py TabListView.append_child start')
         """Add a new tab with a parent."""
         return self.model.append_child(parent_iter, tab_info, False, -1)
 
     # XXX: saving height_changed during update_value is an ugly hack for 17178
 
     def update_tab(self, iter_, tab_info):
+        logging.debug('tablist.py TabListView.update_tab start')
         """A TabInfo has changed."""
         height_changed = self.height_changed #17178
         self.model.update_value(iter_, 0, tab_info)
         self.height_changed = height_changed
+        logging.debug('tablist.py TabListView.update_tab done')
 
     def blink_tab(self, iter_):
         """Draw attention to a tab, specified by its Iter."""
@@ -205,7 +212,7 @@ def _last_iter(view, model):
 
 class TabList(signals.SignalEmitter):
     """Handles a list of tabs on the left-side of Miro.
-    
+
     Signals:
         tab-added: a tab has been added to this list; no parameters.
         moved-tabs-to-list(destination): tabs have been moved to destination
@@ -309,9 +316,9 @@ class TabList(signals.SignalEmitter):
             self.view.model.remove(iter_)
         if name in app.tabs.selected_ids:
             # hack for 17653: on OS X, deleting the selected tab doesn't
-            # send selection-changed - so if the tab(s) we've 
+            # send selection-changed - so if the tab(s) we've
             # deleted is selected, explicitly change the selection to
-            # this list's root. This preempts GTK's handling of this 
+            # this list's root. This preempts GTK's handling of this
             # case, which is behaviorally the same.
             app.tabs._handle_no_tabs_selected(self)
 
@@ -426,7 +433,6 @@ class LibraryTabList(TabBlinkerMixin, TabUpdaterMixin, TabList):
 
     def build_tabs(self):
         self.extend([
-            statictabs.ChannelGuideTab(),
             statictabs.VideoLibraryTab(),
             statictabs.AudioLibraryTab(),
         ])
@@ -522,7 +528,7 @@ class LibraryTabList(TabBlinkerMixin, TabUpdaterMixin, TabList):
 
 class HideableTabList(TabList):
     """A type of tablist which nests under a base tab.  Connect,
-    Sources/Sites/Guides, Stores, Feeds, and Playlists are all of this type.
+    Sources/Sites Feeds, and Playlists are all of this type.
     """
 
     ALLOW_MULTIPLE = True
@@ -576,6 +582,7 @@ class HideableTabList(TabList):
         raise NotImplementedError
 
     def setup_list(self, message):
+        logging.debug('tablist.py HideableTabList.setup_list start')
         """Called during startup to set up a newly-created list."""
         if message.root_expanded:
             self.expand(self.info.id)
@@ -610,6 +617,7 @@ class HideableTabList(TabList):
                     self.expand(info.id)
         self._set_up = True
         self._after_change(True)
+        logging.debug('tablist.py HideableTabList.setup_list end')
 
     def on_key_press(self, view, key, mods):
         if key == keyboard.DELETE or key == keyboard.BKSPACE:
@@ -634,6 +642,7 @@ class HideableTabList(TabList):
         if info == self.info:
             message = messages.TabExpandedChange(self.type, expanded)
             message.send_to_backend()
+            logging.debug('on_row_expanded_change done');
         else:
             # non-nestable tabs don't have tablist states, so we put their root
             # nodes all in one table
@@ -689,9 +698,9 @@ class HideableTabList(TabList):
                 self.view.model.remove(iter_)
         if deleted_ids.intersection(set(app.tabs.selected_ids)):
             # hack for 17653: on OS X, deleting the selected tab doesn't
-            # send selection-changed - so if the tab(s) we've 
+            # send selection-changed - so if the tab(s) we've
             # deleted is selected, explicitly change the selection to
-            # this list's root. This preempts GTK's handling of this 
+            # this list's root. This preempts GTK's handling of this
             # case, which is behaviorally the same.
             app.tabs._handle_no_tabs_selected(self)
 
@@ -969,9 +978,6 @@ class SharingTabListHandler(object):
                 app.playback_manager.stop()
             # Default to select the guide.  There's nothing more to see here.
             typ, selected_tabs = app.tabs.selection
-            if typ == u'connect' and (info == selected_tabs[0] or
-              getattr(selected_tabs[0], 'parent_id', None) == info.id):
-                app.tabs.select_guide()
             messages.StopTrackingShare(info.share_id).send_to_backend()
 
     def init_info(self, info):
@@ -1137,36 +1143,6 @@ class SiteList(HideableTabList):
         """Return the iter pointing to this list's default tab."""
         return self.iter_map[self.default_info.id]
 
-class StoreList(SiteList):
-    type = u'store'
-    name = _('Stores')
-    icon_name = 'icon-store'
-
-    ALLOW_MULTIPLE = False
-
-    def __init__(self):
-        # FIXME - we redo the translation here so we're doing it at
-        # instantiation time and NOT at import time which is stupid.
-        StoreList.name = _("Stores")
-        SiteList.__init__(self)
-
-    def on_delete_key_pressed(self):
-        pass # XXX: can't delete stores(?)
-
-    def default_icon_path(self):
-        icon = resources.path('images/icon-store-small.png')
-        icon_active = resources.path('images/icon-store-small_active.png')
-        return (icon, icon_active)
-
-    def on_context_menu(self, table_view):
-        tablist_type, selected_rows = app.tabs.selection
-        if len(selected_rows) == 1 and selected_rows[0].type != u'tab':
-            return [
-                (_('Copy URL to clipboard'), app.widgetapp.copy_site_url),
-            ]
-        else:
-            return []
-
 class NestedTabListMixin(object):
     """Tablist for tabs that can be put into folders (playlists and feeds)."""
     def on_context_menu(self, table_view):
@@ -1330,5 +1306,5 @@ def all_tab_lists():
     """Return an iterable of all the tablist instances TabListManager should
     own, in no particular order.
     """
-    return (StaticTabList(), LibraryTabList(), ConnectList(), SiteList(),
-            StoreList(), FeedList(), PlaylistList())
+    return (StaticTabList(), LibraryTabList(), ConnectList(),
+            FeedList(), PlaylistList())

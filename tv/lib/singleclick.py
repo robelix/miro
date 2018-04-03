@@ -39,13 +39,10 @@ import time
 from miro.feedparserutil import FeedParserDict
 
 from miro import app
-from miro import amazon
-from miro import emusic
 from miro import dialogs
 from miro import item
 from miro import feed
 from miro import filetypes
-from miro import flashscraper
 from miro import folder
 from miro import httpclient
 from miro import prefs
@@ -141,7 +138,7 @@ def download_unknown_mime_type(url):
 
 def add_download(url, handle_unknown_callback=None, metadata=None):
     """Given a url, this tries to figure out what it is (video, audio,
-    torrent, rss feed, flash file that Miro can scrape) and handles it
+    torrent, rss feed) and handles it
     accordingly.
 
     If it can't figure out what it is, then it calls
@@ -221,15 +218,6 @@ def add_download(url, handle_unknown_callback=None, metadata=None):
                 add_feeds([url])
                 return
 
-            if  flashscraper.is_maybe_flashscrapable(url):
-                entry = _build_entry(url, 'video/x-flv', additional=metadata)
-                download_video(entry)
-                return
-
-            if amazon.is_amazon_content_type(content_type):
-                amazon.download_file(url, handle_unknown_callback)
-                return
-
             if filetypes.is_maybe_feed_content_type(content_type):
                 logging.info("%s content type is %s.  "
                              "going to peek to see if it's a feed....",
@@ -249,10 +237,6 @@ def add_download(url, handle_unknown_callback=None, metadata=None):
         callback(None, metadata['mime_type'])
     elif is_magnet_uri(url):
         callback(None, 'application/x-magnet')
-    elif amazon.is_amazon_url(url):
-        amazon.download_file(url, handle_unknown_callback)
-    elif emusic.is_emusic_url(url):
-        emusic.download_file(url, handle_unknown_callback)
     else:
         httpclient.grab_headers(url, callback, errback)
 

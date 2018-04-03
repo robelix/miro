@@ -322,7 +322,7 @@ class ItemRenderer(widgetset.ItemListRenderer):
     def add_right_buttons(self):
         self.canvas.add_menu_button()
 
-        if ((self.info.is_external or self.info.downloaded) and 
+        if ((self.info.is_external or self.info.downloaded) and
             self.info.source_type != 'sharing'):
             self.canvas.add_remove_button(*self.remove_button_info())
 
@@ -570,37 +570,6 @@ class ItemRendererCanvas(object):
         self.selected = selected
         self.hotspot = hotspot
         self.download_mode = download_mode
-        self.setup_guides(width, height)
-
-    def setup_guides(self, width, height):
-        """Setup attributes to use as guides when we lay stuff out."""
-        total_rect = cellpack.LayoutRect(0, 0, width, height)
-        # NOTE: background image extends a few pixels beyond the actual
-        # boundaries so that it can draw shadows and other things
-        background_rect = total_rect.subsection(*PADDING)
-        self.layout.add_rect(background_rect, self.draw_background)
-        # area inside the boundaries of the background
-        inner_rect = background_rect.subsection(*PADDING_BACKGROUND)
-        self.image_rect = inner_rect.left_side(self.image_width)
-        if self.download_mode:
-            right_width = RIGHT_WIDTH_DOWNLOAD_MODE
-        else:
-            right_width = RIGHT_WIDTH
-        self.right_rect = inner_rect.right_side(right_width)
-        self.middle_rect = inner_rect.subsection(self.image_width + 20,
-                right_width + 15, 0 ,0)
-        self.right_button_x = (self.right_rect.right -
-                RIGHT_BUTTON_WIDTH - 20)
-        if self.download_mode:
-            self.download_info_rect = self.right_rect.subsection(
-                12, 12, 12, 15)
-        # emblem/progress bar should start 29px above the top of the cell
-        self.emblem_bottom = total_rect.bottom - 29
-        # reset coordinates that we set as we add elements
-        self.download_info_bottom =  None
-        self.button_right = 0
-        self.emblem_right = 0
-        self.last_secondary_button_right = 0
 
     def finish(self):
         """Get a Layout object for a finished cell.
