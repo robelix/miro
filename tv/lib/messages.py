@@ -114,20 +114,6 @@ class StopTrackingPlaylists(BackendMessage):
     """
     pass
 
-class TrackGuides(BackendMessage):
-    """Begin tracking guides.
-
-    After this message is sent, the backend will send back a GuideList
-    message, then it will send GuidesChanged messages whenever the guide
-    list changes.
-    """
-    pass
-
-class StopTrackingGuides(BackendMessage):
-    """Stop tracking guides.
-    """
-    pass
-
 class TrackDownloadCount(BackendMessage):
     """Start tracking the number of downloading items.  After this message is
     received the backend will send a corresponding DownloadCountChanged

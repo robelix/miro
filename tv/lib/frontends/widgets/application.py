@@ -163,7 +163,6 @@ class Application:
         data.init()
         # Send a couple messages to the backend, when we get responses,
         # WidgetsMessageHandler() will call build_window()
-        messages.TrackGuides().send_to_backend()
         messages.QuerySearchInfo().send_to_backend()
         messages.TrackWatchedFolders().send_to_backend()
         messages.QueryDisplayStates().send_to_backend()
