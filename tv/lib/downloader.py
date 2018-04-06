@@ -567,7 +567,10 @@ class RemoteDownloader(DDBObject):
     def run_downloader(self):
         """This is the actual download thread.
         """
-        # still needed?
+        # the reason why this is split in two functions
+        # here was flashscraper with callback:
+        # flashscraper.try_scraping_url(self.url, self._run_downloader)
+        self._run_downloader(self.url)
 
     def _run_downloader(self, url, content_type=None, title=None):
         # still needed?
