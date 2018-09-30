@@ -197,6 +197,8 @@ class Daemon(ConnectionHandler):
 
 class DownloaderDaemon(Daemon):
     def __init__(self, host, port, short_app_name):
+        logging.debug("DownloaderDaemon __init__")
+
         # before anything else, write out our PID
         write_pid(short_app_name, os.getpid())
         # connect to the controller and start our listen loop
@@ -232,6 +234,7 @@ class DownloaderDaemon(Daemon):
 
 class ControllerDaemon(Daemon):
     def __init__(self):
+        logging.debug("ControllerDaemon __init__")
         Daemon.__init__(self)
         family, addr = util.localhost_family_and_addr()
         self.stream.accept_connection(family, addr, 0, self.on_connection,
@@ -246,9 +249,11 @@ class ControllerDaemon(Daemon):
         self._httpauth_callback_handle = None
 
     def start_downloader_daemon(self):
+        logging.debug("ControllerDaemon start_downloader_daemon")
         start_download_daemon(self.read_pid(), self.addr, self.port)
 
     def _setup_config(self):
+        logging.debug("ControllerDaemon _setup_config")
         remote_config_items = [
             prefs.LIMIT_UPSTREAM,
             prefs.UPSTREAM_LIMIT_IN_KBS,
@@ -289,34 +294,41 @@ class ControllerDaemon(Daemon):
             "changed", self.on_config_change)
 
     def _remove_config_callback(self):
+        logging.debug("ControllerDaemon _remove_config_callback")
         if self._callback_handle is not None:
             app.backend_config_watcher.disconnect(self._callback_handle)
             self._callback_handle = None
 
     def on_config_change(self, obj, key, value):
+        logging.debug("ControllerDaemon on_config_change")
         if not self.shutdown:
             c = command.UpdateConfigCommand(self, key, value)
             c.send()
 
     def _setup_httpauth(self):
+        logging.debug("ControllerDaemon _setup_httpauth")
         c = command.UpdateHTTPPasswordsCommand(self, httpauth.all_passwords())
         c.send()
         self._httpauth_callback_handle = httpauth.add_change_callback(
                 self.update_http_auth)
 
     def _remove_httpauth_callback(self):
+        logging.debug("ControllerDaemon _remove_httpauth_callback")
         if self._httpauth_callback_handle is not None:
             httpauth.remove_change_callback(self._httpauth_callback_handle)
 
     def update_http_auth(self, passwords):
+        logging.debug("ControllerDaemon update_http_auth")
         c = command.UpdateHTTPPasswordsCommand(self, passwords)
         c.send()
 
     def read_pid(self):
+        logging.debug("ControllerDaemon red_pid")
         short_app_name = app.config.get(prefs.SHORT_APP_NAME)
         return read_pid(short_app_name)
 
     def handle_close(self, type_):
+        logging.debug("ControllerDaemon handle_close")
         if not self.shutdown:
             logging.error("Downloader daemon died")
             # FIXME: replace with code to recover here, but for now,
@@ -326,17 +338,20 @@ class ControllerDaemon(Daemon):
             self._remove_httpauth_callback()
 
     def shutdown_timeout_cb(self):
+        logging.debug("ControllerDaemon shutdown_timeout_cb")
         logging.warning("killing download daemon")
         kill_process(self.read_pid())
         self.shutdown_response()
 
     def shutdown_response(self):
+        logging.debug("ControllerDaemon shutdown_response")
         if self._shutdown_callback:
             self._shutdown_callback()
         if self._shutdown_timeout_dc:
             self._shutdown_timeout_dc.cancel()
 
     def shutdown_downloader_daemon(self, timeout=5, callback=None):
+        logging.debug("ControllerDaemon shutdown_downloader_daemon")
         """Send the downloader daemon the shutdown command.  If it
         doesn't reply before timeout expires, kill it.  (The reply is
         not sent until the downloader daemon has one remaining thread

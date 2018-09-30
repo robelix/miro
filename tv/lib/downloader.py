@@ -124,6 +124,7 @@ class DownloadStateManager(object):
             return None
 
     def add_download(self, dlid, downloader):
+        logging.debug("Downloadstatemanager add_download %s", dlid)
         self.downloads[dlid] = downloader
 
     def delete_download(self, dlid):
@@ -138,6 +139,7 @@ class DownloadStateManager(object):
         return self.daemon_starter and self.daemon_starter.started
 
     def queue(self, identifier, cmd, args):
+        logging.debug("Downloadstatemanager queue %s", identifier)
         if not self.downloads.has_key(identifier):
             raise ValueError('add_download() not called before queue()')
 

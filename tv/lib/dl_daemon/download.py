@@ -412,7 +412,7 @@ class DownloadStatusUpdater(object):
     problems.
     """
 
-    UPDATE_CLIENT_INTERVAL = 1
+    UPDATE_CLIENT_INTERVAL = 5
 
     def __init__(self):
         self.to_update = set()
@@ -727,6 +727,8 @@ class HTTPDownloader(BGDownloader):
 
     def __init__(self, url=None, dlid=None, restore=None,
                  expected_content_type=None):
+        logging.debug("HTTPDownloader __init__ %s", url)
+
         self.retry_dc = None
         self.channel_name = None
         self.expected_content_type = expected_content_type
@@ -746,12 +748,14 @@ class HTTPDownloader(BGDownloader):
             self.update_client()
 
     def start_new_download(self):
+        logging.debug("HTTPDownloader start_new_download %s", self.url)
         """Start a download, discarding any existing data"""
         self.current_size = 0
         self.total_size = None
         self.start_download(resume=False)
 
     def start_download(self, resume=True):
+        logging.debug("HTTPDownloader start_download %s", self.url)
         if self.retry_dc:
             self.retry_dc.cancel()
             self.retry_dc = None
@@ -767,6 +771,7 @@ class HTTPDownloader(BGDownloader):
         self.update_stats()
 
     def _resume_sanity_check(self):
+        logging.debug("HTTPDownloader _resume_sanity_ckeck %s", self.url)
         """Do sanity checks to test if we should try HTTP Resume.
 
         :returns: If we should still try HTTP resume
@@ -793,12 +798,14 @@ class HTTPDownloader(BGDownloader):
         return True
 
     def destroy_client(self):
+        logging.debug("HTTPDownloader destroy_client %s", self.url)
         """update the stats before we throw away the client.
         """
         self.update_stats()
         self.client = None
 
     def cancel_request(self, remove_file=False):
+        logging.debug("HTTPDownloader cancel_request %s", self.url)
         if self.client is not None:
             self.client.cancel(remove_file=remove_file)
             self.destroy_client()
@@ -808,6 +815,7 @@ class HTTPDownloader(BGDownloader):
             self.retry_dc = None
 
     def handle_error(self, short_reason, reason):
+        logging.debug("HTTPDownloader handle_error %s", self.url)
         BGDownloader.handle_error(self, short_reason, reason)
         self.cancel_request()
         if os.path.exists(self.filename):
@@ -819,10 +827,12 @@ class HTTPDownloader(BGDownloader):
         self.total_size = None
 
     def handle_temporary_error(self, short_reason, reason):
+        logging.debug("HTTPDownloader handle_temporary_error %s", self.url)
         self.cancel_request()
         BGDownloader.handle_temporary_error(self, short_reason, reason)
 
     def handle_move_error(self, error):
+        logging.debug("HTTPDownloader handle_move_error %s", self.url)
         logging.exception("Error moving to movies directory\n"
                 "filename: %s, short_filename: %s, movies directory: %s",
                 self.filename, self.short_filename,
@@ -831,6 +841,7 @@ class HTTPDownloader(BGDownloader):
         self.handle_generic_error(text)
 
     def on_headers(self, info):
+        logging.debug("HTTPDownloader on_headers %s", self.url)
         if 'total-size' in info:
             self.total_size = info['total-size']
         if not self.accept_download_size(self.total_size):
@@ -852,6 +863,7 @@ class HTTPDownloader(BGDownloader):
                 ext_content_type)
 
     def on_download_error(self, error):
+        logging.debug("HTTPDownloader on_download_error %s", self.url)
         if isinstance(error, httpclient.ResumeFailed):
             # try starting from scratch
             self.current_size = 0
@@ -868,6 +880,7 @@ class HTTPDownloader(BGDownloader):
             self.handle_network_error(error)
 
     def on_download_finished(self, response):
+        logging.debug("HTTPDownloader on_download_finished %s", self.url)
         self.destroy_client()
         self.state = u"finished"
         self.end_time = int(clock())
@@ -888,11 +901,13 @@ class HTTPDownloader(BGDownloader):
         self.update_client()
 
     def get_status(self):
+        logging.debug("HTTPDownloader get_status %s", self.url)
         data = BGDownloader.get_status(self)
         data['type'] = 'HTTP'
         return data
 
     def update_stats(self):
+        logging.debug("HTTPDownloader update_stats %s", self.url)
         """Update the download rate and eta based on receiving length
         bytes.
         """
@@ -910,6 +925,7 @@ class HTTPDownloader(BGDownloader):
         self.update_client()
 
     def pause(self):
+        logging.debug("HTTPDownloader pause %s", self.url)
         """Pauses the download.
         """
         if self.state != u"stopped":
@@ -918,6 +934,7 @@ class HTTPDownloader(BGDownloader):
             self.update_client()
 
     def stop(self, delete):
+        logging.debug("HTTPDownloader stop %s", self.url)
         """Stops the download and removes the partially downloaded
         file.
         """
@@ -939,10 +956,12 @@ class HTTPDownloader(BGDownloader):
         self.update_client()
 
     def stop_upload(self):
+        logging.debug("HTTPDownloader stop_upload %s", self.url)
         # HTTP downloads never upload.
         pass
 
     def start(self, resume=True):
+        logging.debug("HTTPDownloader start %s", self.url)
         """Continues a paused or stopped download thread.
         """
         if self.state in (u'paused', u'stopped', u'offline'):
@@ -950,6 +969,7 @@ class HTTPDownloader(BGDownloader):
             self.start_download(resume=resume)
 
     def shutdown(self):
+        logging.debug("HTTPDownloader shutdown %s", self.url)
         self.cancel_request()
         self.update_client()
 
@@ -1299,7 +1319,7 @@ class BTDownloader(BGDownloader):
         self.current_size = status.total_wanted_done
 
         # these are useful for debugging torrent issues
-        # self._debug_print_status()
+        self._debug_print_status()
         # self._debug_print_peers()
 
         if ((self.state == u"downloading"
