@@ -35,3 +35,11 @@ sandbox_*
 docs/developer/_build/
 docs/developer/build/
 docs/developer/dist/
+
+tv/lib/data/namecollation.so
+tv/lib/frontends/widgets/gtk/fixedliststore.so
+tv/lib/frontends/widgets/gtk/pygtkhacks.so
+tv/lib/ngrams.so
+tv/lib/plat
+tv/linux/plat/xlibhelper.so
+
