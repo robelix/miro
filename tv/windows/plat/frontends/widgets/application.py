@@ -61,7 +61,6 @@ from miro.frontends.widgets.gtk import trayicon
 from miro.frontends.widgets.gtk import widgets
 from miro.plat.frontends.widgets import bonjour
 from miro.plat.frontends.widgets import embeddingwidget
-from miro.plat.frontends.widgets import flash
 from miro.plat.frontends.widgets import timer
 from miro.plat.frontends.widgets.threads import call_on_ui_thread
 
@@ -142,10 +141,9 @@ class WindowsApplication(Application):
         sys.excepthook = self.exception_handler
         Application.startup_ui(self)
         call_on_ui_thread(migrateappname.migrateVideos, 'Democracy', 'Miro')
-        call_on_ui_thread(flash.check_flash_install)
         call_on_ui_thread(bonjour.check_bonjour_install)
         timer.add(15, self._init_autoupdate)
-        
+
     def _init_autoupdate(self):
         if app.config.get(prefs.APP_FINAL_RELEASE) == u"0":
             # if this is not a final release, look at the beta

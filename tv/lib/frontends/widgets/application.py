@@ -34,7 +34,6 @@ level running of the Miro application.
 It also holds:
 
 * :class:`WidgetsMessageHandler` -- frontend message handler
-* :class:`DisplayStateStore` -- stores state of each display
 """
 
 import cProfile
@@ -80,7 +79,6 @@ from miro.frontends.widgets import playback
 from miro.frontends.widgets import search
 from miro.frontends.widgets import rundialog
 from miro.frontends.widgets import watchedfolders
-from miro.frontends.widgets import stores
 from miro.frontends.widgets import quitconfirmation
 from miro.frontends.widgets import firsttimedialog
 from miro.frontends.widgets import feedsettingspanel
@@ -98,24 +96,32 @@ class Application:
     extends this class with a platform-specific version.
     """
     def __init__(self):
+        logging.debug('application.py Application.__init__ starting')
         app.widgetapp = self
         self.ignore_errors = False
         self.message_handler = WidgetsMessageHandler()
         self.window = None
+        logging.debug('application.py Application.__init__ widgetsmessagehandler')
         self.ui_initialized = False
         messages.FrontendMessage.install_handler(self.message_handler)
+        logging.debug('application.py Application.__init__ frontendmessage handler')
         app.item_list_pool = itemlist.ItemListPool()
+        logging.debug('application.py Application.__init__ itemlistpool')
         app.item_tracker_updater = itemlist.ItemTrackerUpdater()
+        logging.debug('application.py Application.__init__ trackerupdater')
         app.info_updater = infoupdater.InfoUpdater()
+        logging.debug('application.py Application.__init__ infoupdater')
         app.saved_items = set()
         app.watched_folder_manager = watchedfolders.WatchedFolderManager()
-        app.store_manager = stores.StoreManager()
+        logging.debug('application.py Application.__init__ watchedfoldermanager')
         self.download_count = 0
         self.paused_count = 0
         self.unwatched_count = 0
         app.frontend_config_watcher = config.ConfigWatcher(call_on_ui_thread)
+        logging.debug('application.py Application.__init__ configwatcher')
         self.crash_reports_to_handle = []
         app.widget_state = WidgetStateStore()
+        logging.debug('application.py Application.__init__ done')
 
     def exception_handler(self, typ, value, traceback):
         report = crashreport.format_crash_report("in frontend thread",
@@ -137,6 +143,7 @@ class Application:
             crashreport.issue_failure_warning(when, details, with_exception)
 
     def startup(self):
+        logging.debug('application.py Application.startup start')
         """Connects to signals, installs handlers, and calls :meth:`startup`
         from the :mod:`miro.startup` module.
         """
@@ -145,8 +152,10 @@ class Application:
         startup.install_movies_directory_gone_handler(self.handle_movies_directory_gone)
         startup.install_first_time_handler(self.handle_first_time)
         startup.startup()
+        logging.debug('application.py Application.startup done')
 
     def startup_ui(self):
+        logging.debug('application.py Application.startup_ui start')
         """Starts up the widget ui by sending a bunch of messages
         requesting data from the backend.  Also sets up managers,
         initializes the ui, and displays the :class:`MiroWindow`.
@@ -154,7 +163,6 @@ class Application:
         data.init()
         # Send a couple messages to the backend, when we get responses,
         # WidgetsMessageHandler() will call build_window()
-        messages.TrackGuides().send_to_backend()
         messages.QuerySearchInfo().send_to_backend()
         messages.TrackWatchedFolders().send_to_backend()
         messages.QueryDisplayStates().send_to_backend()
@@ -174,8 +182,10 @@ class Application:
         self.window.connect_weak('on-shown', self.on_shown)
         self._window_show_callback = self.window.connect_weak('show',
                 self.on_window_show)
+        logging.debug('application.py Application.startup_ui done')
 
     def setup_globals(self):
+        logging.debug('application.py Application.setup_globals start')
         app.item_list_controller_manager = \
                 itemlistcontroller.ItemListControllerManager()
         app.playback_manager = playback.PlaybackManager()
@@ -184,6 +194,7 @@ class Application:
         app.search_manager = search.SearchManager()
         app.inline_search_memory = search.InlineSearchMemory()
         app.tabs = tablistmanager.TabListManager()
+        logging.debug('application.py Application.setup_globals done')
 
     def on_config_changed(self, obj, key, value):
         """Any time a preference changes, this gets notified so that we
@@ -192,6 +203,7 @@ class Application:
         raise NotImplementedError()
 
     def on_window_show(self, window):
+        logging.debug('application.py Application.on_window_show start')
         m = messages.FrontendStarted()
         # Use call_on_ui_thread to introduce a bit of a delay.  On GTK it uses
         # gobject.add_idle(), so it won't run until the GUI processing is
@@ -200,8 +212,10 @@ class Application:
         call_on_ui_thread(m.send_to_backend)
         self.window.disconnect(self._window_show_callback)
         del self._window_show_callback
+        logging.debug('application.py Application.on_window_show done')
 
     def on_shown(self, widget):
+        logging.debug('application.py Application.on_shown start')
         """Called after the window has been shown (later than on_window_show).
         This is useful for e.g. restoring a saved selection, which is overridden
         by the default first-row selection if done too early.
@@ -210,6 +224,7 @@ class Application:
         app.startup_timer.log_total_time()
         logging.debug('on_shown')
         app.tabs.on_shown()
+        logging.debug('application.py Application.on_shown done')
 
     def on_key_press(self, window, key, mods):
         if app.playback_manager.is_playing:
@@ -277,15 +292,17 @@ class Application:
         firsttimedialog.FirstTimeDialog(continue_callback).run()
 
     def build_window(self):
+        logging.debug('application.py Application.build_window start')
         app.startup_timer.log_time("in build_window")
         app.display_manager = displays.DisplayManager()
-        app.tabs['site'].extend(self.message_handler.initial_guides)
-        app.tabs['store'].extend(self.message_handler.initial_stores)
+        logging.debug('application.py Application.build_window displaymanager')
         videobox = self.window.videobox
+        logging.debug('application.py Application.build_window videobox')
         videobox.volume_slider.set_value(app.config.get(prefs.VOLUME_LEVEL))
         videobox.volume_slider.connect('changed', self.on_volume_change)
         videobox.volume_slider.connect('released', self.on_volume_set)
         videobox.volume_muter.connect('clicked', self.on_volume_mute)
+        logging.debug('application.py Application.build_window volume')
         videobox.controls.play.connect('clicked', self.on_play_clicked)
         videobox.controls.stop.connect('clicked', self.on_stop_clicked)
         videobox.controls.forward.connect('clicked', self.on_forward_clicked)
@@ -294,17 +311,28 @@ class Application:
         videobox.controls.previous.connect('clicked', self.on_previous_clicked)
         videobox.controls.previous.connect('held-down', self.on_fast_backward)
         videobox.controls.previous.connect('released', self.on_stop_fast_playback)
+        logging.debug('application.py Application.build_window controls')
         videobox.playback_mode.shuffle.connect('clicked', self.on_shuffle_clicked)
         videobox.playback_mode.repeat.connect('clicked', self.on_repeat_clicked)
+        logging.debug('application.py Application.build_window playbackbuttons')
         self.set_left_width(app.widget_state.get_tabs_width())
+        logging.debug('application.py Application.build_window tabswitdth')
         self.window.show()
+        logging.debug('application.py Application.build_window show')
         messages.TrackPlaylists().send_to_backend()
+        logging.debug('application.py Application.build_window trackplaylists')
         messages.TrackDownloadCount().send_to_backend()
+        logging.debug('application.py Application.build_window trackdownloadcount')
         messages.TrackPausedCount().send_to_backend()
+        logging.debug('application.py Application.build_window trackpausedcount')
         messages.TrackOthersCount().send_to_backend()
+        logging.debug('application.py Application.build_window trackotherscount')
         messages.TrackNewVideoCount().send_to_backend()
+        logging.debug('application.py Application.build_window tracknewvideocount')
         messages.TrackNewAudioCount().send_to_backend()
+        logging.debug('application.py Application.build_window tracknewaudiocount')
         messages.TrackUnwatchedCount().send_to_backend()
+        logging.debug('application.py Application.build_window done')
 
     def get_main_window_dimensions(self):
         """Override this to provide platform-specific Main Window dimensions.
@@ -797,17 +825,6 @@ class Application:
                 child_ids = None
             messages.NewFeedFolder(name, child_ids).send_to_backend()
 
-    def add_new_guide(self):
-        url = self.ask_for_url(_('Add Source'),
-                _('Enter the URL of the source to add'),
-                _('Add Source - Invalid URL'),
-                _("The address you entered is not a valid url.\n"
-                  "Please check the URL and try again.\n\n"
-                  "Enter the URL of the source to add"))
-
-        if url is not None:
-            messages.NewGuide(url).send_to_backend()
-
     def remove_something(self):
         t, infos = app.tabs.selection_and_children
         if any(info.type == 'tab' for info in infos):
@@ -1298,11 +1315,10 @@ class WidgetsMessageHandler(messages.MessageHandler):
     more details.
     """
     def __init__(self):
+        logging.debug('application.py WidgetsMessageHandler.__init__ start ')
         messages.MessageHandler.__init__(self)
         # Messages that we need to see before the UI is ready
         self._pre_startup_messages = set([
-            'guide-list',
-            'store-list',
             'search-info',
             'display-states',
             'view-states',
@@ -1318,6 +1334,7 @@ class WidgetsMessageHandler(messages.MessageHandler):
         self.dbupgrade_progress_dialog = None
         self._profile_info = None
         self._startup_failure_mode = self._database_failure_mode = False
+        logging.debug('application.py WidgetsMessageHandler.__init__ end ')
 
     def profile_next_message(self, message_obj, path):
         self._profile_info = (message_obj, path)
@@ -1334,8 +1351,6 @@ class WidgetsMessageHandler(messages.MessageHandler):
         logging.debug('SHARING DISAPPEARED')
         message = messages.TabsChanged('connect', [], [], [share.id])
         typ, selected_tabs = app.tabs.selection
-        if typ == u'connect' and share in selected_tabs:
-            app.tabs.select_guide()
         # Call directly: already in frontend.
         self.handle_tabs_changed(message)
         # Now, reply to backend, and eject the share.
@@ -1393,7 +1408,6 @@ class WidgetsMessageHandler(messages.MessageHandler):
                         {"name": name,
                          "appname": app.config.get(prefs.SHORT_APP_NAME)})
         dialogs.show_message(title, description, dialogs.INFO_MESSAGE)
-        app.tabs.select_guide()
 
     def handle_show_warning(self, message):
         dialogs.show_message(message.title, message.description,
@@ -1482,8 +1496,10 @@ class WidgetsMessageHandler(messages.MessageHandler):
         return self._startup_failure_mode or self._database_failure_mode
 
     def handle_startup_success(self, message):
+        logging.debug('application.py handle_startup_success start')
         app.widgetapp.startup_ui()
         signals.system.emit('startup-success')
+        logging.debug('application.py handle_startup_success done')
 
     def _saw_pre_startup_message(self, name):
         if name not in self._pre_startup_messages:
@@ -1518,34 +1534,14 @@ class WidgetsMessageHandler(messages.MessageHandler):
         self._saw_pre_startup_message('search-info')
 
     def handle_tab_list(self, message):
+        logging.debug('application.py WidgetsMessageHandler.handle_tab_list started')
+        logging.debug(message)
         tablist = app.tabs[message.type]
         tablist.setup_list(message)
         if 'feed' in message.type:
             pre_startup_message = message.type + '-tab-list'
             self._saw_pre_startup_message(pre_startup_message)
-
-    def handle_guide_list(self, message):
-        self.initial_guides = message.added_guides
-        self._saw_pre_startup_message('guide-list')
-        app.tabs['site'].default_info = message.default_guide
-        app.tabs['site'].setup_list(message)
-
-    def handle_store_list(self, message):
-        self.initial_stores = message.visible_stores
-        self._saw_pre_startup_message('store-list')
-        app.store_manager.handle_guide_list(message.visible_stores)
-        app.store_manager.handle_guide_list(message.hidden_stores)
-        app.tabs['store'].setup_list(message)
-
-    def handle_stores_changed(self, message):
-        app.store_manager.handle_stores_changed(message.added,
-                                                message.changed,
-                                                message.removed)
-
-    def update_default_guide(self, guide_info):
-        app.tabs['site'].default_info = guide_info
-        guide_tab = app.tabs['site'].get_tab(guide_info.id)
-        guide_tab.update(guide_info)
+        logging.debug('application.py WidgetsMessageHandler.handle_tab_list done')
 
     def handle_watched_folder_list(self, message):
         app.watched_folder_manager.handle_watched_folder_list(
@@ -1556,12 +1552,6 @@ class WidgetsMessageHandler(messages.MessageHandler):
                 message.added, message.changed, message.removed)
 
     def handle_tabs_changed(self, message):
-        if message.type == 'guide':
-            for info in list(message.changed):
-                if info.default:
-                    self.update_default_guide(info)
-                    message.changed.remove(info)
-                    break
         tablist = app.tabs[message.type]
         if message.removed:
             tablist.remove(message.removed)
@@ -1691,12 +1681,16 @@ class WidgetsMessageHandler(messages.MessageHandler):
         self._saw_pre_startup_message('display-states')
 
     def handle_current_view_states(self, message):
+        logging.debug('application.py handle_current_view_states begin')
         app.widget_state.setup_views(message)
         self._saw_pre_startup_message('view-states')
+        logging.debug('application.py handle_current_view_states end')
 
     def handle_current_global_state(self, message):
+        logging.debug('application.py handle_current_global_state begin')
         app.widget_state.setup_global_state(message)
         self._saw_pre_startup_message('global-state')
+        logging.debug('application.py handle_current_global_state end')
 
     def handle_progress_dialog_start(self, message):
         self.progress_dialog = dialogs.ProgressDialog(message.title)
@@ -1734,10 +1728,14 @@ class WidgetsMessageHandler(messages.MessageHandler):
 
 class WidgetsFrontend(app.Frontend):
     def call_on_ui_thread(self, func, *args, **kwargs):
+        logging.debug('application.py WidgetsFrontend.call_on_ui_thread start')
         call_on_ui_thread(func, *args, **kwargs)
+        logging.debug('application.py WidgetsFrontend.call_on_ui_thread end')
 
     def run_choice_dialog(self, title, description, buttons):
+        logging.debug('application.py WidgetsFrontend.run_choice_dialog')
         return dialogs.show_choice_dialog(title, description, buttons)
 
     def quit(self):
+        logging.debug('application.py WidgetsFrontend.quit')
         app.widgetapp.do_quit()

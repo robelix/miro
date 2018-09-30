@@ -114,7 +114,6 @@ class IconCache(DDBObject):
     def orphaned_view(cls):
         """Downloaders with no items associated with them."""
         return cls.make_view("id NOT IN (SELECT icon_cache_id from item "
-                "UNION select icon_cache_id from channel_guide "
                 "UNION select icon_cache_id from feed)")
 
     @classmethod
@@ -343,7 +342,7 @@ def make_icon_cache(obj):
 
 class IconCacheOwnerMixin(object):
     """Mixin class for objects that own IconCache instances
-    (currently, Feed, Item and ChannelGuide).
+    (currently, Feed, Item).
     """
 
     def setup_new_icon_cache(self):

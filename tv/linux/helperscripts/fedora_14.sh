@@ -27,7 +27,6 @@ yum install \
    dbus-python \
    rb_libtorrent \
    rb_libtorrent-python \
-   pywebkitgtk \
    gstreamer-python \
    python-mutagen \
    boost-devel \

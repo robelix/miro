@@ -40,9 +40,10 @@ import logging
 
 class TabListManager(dict):
     """TabListManager is a map of list_type:TabList which manages a selection."""
-    ORDER = ('library', 'static', 'connect', 'site', 'store', 'feed', 'playlist')
+    ORDER = ('library', 'static', 'connect', 'feed', 'playlist')
     # NOTE: when an OrderedDict collection is available, replace ORDER
     def __init__(self):
+        logging.debug('tablistmanager.py TabListManager.__init__ start')
         dict.__init__(self)
         self.type, self.id = u'tablist', u'tablist'
         for tab_list in all_tab_lists():
@@ -60,13 +61,14 @@ class TabListManager(dict):
         self._is_base_selected = False
         self._shown = False
         self._restoring = None
+        logging.debug('tablistmanager.py TabListManager.__init__ done')
 
     def _get_restore_tab(self):
         restoring = None
         if app.config.get(prefs.REMEMBER_LAST_DISPLAY):
             restoring = app.widget_state.get_selection(self.type, self.id)
         if not restoring:
-            restoring = ['library', '0'] # guide
+            restoring = ['feed', '0'] # podcasts
         return restoring
 
     @property
@@ -118,10 +120,6 @@ class TabListManager(dict):
         unique_tabs = set(ordered_tabs)
         ordered_unique_tabs = sorted(unique_tabs, key=ordered_tabs.index)
         return self._selected_tablist.type, ordered_unique_tabs
-
-    def select_guide(self):
-        """Select the default Source - usually, the Guide tab."""
-        self._select_from_tab_list('library', self['library'].get_default())
 
     def select_search(self):
         """Select the Video Search tab."""
@@ -277,7 +275,7 @@ class TabListManager(dict):
 
     def on_tab_added(self, tab_list):
         """A tablist has gained a tab.
-        
+
         To respond correctly to saved selections that are no longer available,
         we need to know when all messages for existing tabs have been sent. This
         relies on the fact that TabList's message batching causes all initial

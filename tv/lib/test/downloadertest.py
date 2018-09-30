@@ -17,8 +17,6 @@ class DownloaderTest(MiroTestCase):
         MiroTestCase.setUp(self)
         self.mock_grab_headers = self.patch_for_test(
             'miro.httpclient.grab_headers')
-        self.mock_try_scraping_url = self.patch_for_test(
-            'miro.flashscraper.try_scraping_url')
         self.mock_send = self.patch_for_test(
             'miro.dl_daemon.command.Command.send')
         self.feed = testobjects.make_feed()
@@ -33,7 +31,6 @@ class DownloaderTest(MiroTestCase):
         self.item.download()
         self.dlid = self.item.downloader.dlid
         self.run_content_type_check()
-        self.run_flash_scrape()
         self.run_daemon_commands()
 
     def run_content_type_check(self):
@@ -46,13 +43,6 @@ class DownloaderTest(MiroTestCase):
             'updated-url': self.url,
             'content-type': 'video/mp4'
         })
-
-    def run_flash_scrape(self):
-        self.assertEquals(self.mock_try_scraping_url.call_count, 1)
-        url, callback = self.mock_try_scraping_url.call_args[0]
-        self.assertEquals(url, self.url)
-        self.mock_try_scraping_url.reset_mock()
-        callback(self.url)
 
     def run_daemon_commands(self):
         app.download_state_manager.send_updates()

@@ -57,11 +57,9 @@ from miro import databaselog
 from miro import databaseupgrade
 from miro import dbupgradeprogress
 from miro import dialogs
-from miro import donate
 from miro import downloader
 from miro import eventloop
 from miro import fileutil
-from miro import guide
 from miro import httpauth
 from miro import httpclient
 from miro import iconcache
@@ -187,6 +185,8 @@ def initialize(themeName):
             # if it is a final release, then we're not in debugmode
             app.debugmode = False
 
+    app.debugmode = True
+
     # this is platform specific
     setup_logging(app.config.get(prefs.LOG_PATHNAME),
                  main_process=True)
@@ -299,6 +299,7 @@ def startup_for_frontend(obj, thread):
     item.setup_metadata_manager()
 
     _startup_checker.run_checks()
+    logging.debug('startup.py startup_for_frontend done')
 
 def fix_database_inconsistencies():
     item.fix_non_container_parents()
@@ -465,6 +466,8 @@ def fix_movies_gone(new_movies_directory):
 
 @eventloop.idle_iterator
 def on_frontend_started():
+    logging.debug('startup.py on_frontend_started starting')
+
     """Perform startup actions that should happen after the frontend is
     already up and running.
 
@@ -482,17 +485,10 @@ def on_frontend_started():
     app.device_tracker.start_tracking()
 
     reconnect_downloaders()
-    guide.download_guides()
     feed.remove_orphaned_feed_impls()
 
     app.download_state_manager.init_controller()
     itemsource.setup_handlers()
-    if app.frontend_name == 'widgets':
-        app.donate_manager = donate.DonateManager()
-    else:
-        logging.warn("frontend is %s, not starting DonateManager()",
-                     app.frontend_name)
-
     logging.info("Starting auto downloader...")
     autodler.start_downloader()
     app.icon_cache_updater.start_updates()
@@ -515,6 +511,7 @@ def on_frontend_started():
     eventloop.add_timeout(60, item.update_incomplete_metadata,
             "update metadata data")
     eventloop.add_timeout(90, clear_icon_cache_orphans, "clear orphans")
+    logging.debug('startup.py on_frontend_started done')
 
 def setup_global_feeds():
     setup_global_feed(u'dtv:manualFeed', initiallyAutoDownloadable=False)
@@ -523,6 +520,7 @@ def setup_global_feeds():
     setup_global_feed(u'dtv:directoryfeed')
 
 def setup_tabs():
+    logging.debug('startup.py setup_tabs start')
     def setup_tab_order(type):
         current_tab_orders = list(tabs.TabOrder.view_for_type(type))
         if len(current_tab_orders) == 0:
@@ -530,9 +528,9 @@ def setup_tabs():
             tabs.TabOrder(type)
         else:
             current_tab_orders[0].restore_tab_list()
-    setup_tab_order(u'site')
     setup_tab_order(u'channel')
     setup_tab_order(u'playlist')
+    logging.debug('startup.py setup_tabs done')
 
 def is_first_time():
     """Checks to see if this is the first time that Miro has been run.
@@ -600,8 +598,12 @@ def setup_theme():
     themeHistory.check_new_theme()
 
 def install_message_handler():
+    logging.info('message handler start')
     handler = messagehandler.BackendMessageHandler(on_frontend_started)
+    logging.info('message handler started')
     messages.BackendMessage.install_handler(handler)
+    logging.info('message handler backend loaded')
+
 
 def _get_theme_history():
     current_themes = list(theme.ThemeHistory.make_view())
@@ -613,7 +615,7 @@ def _get_theme_history():
 @eventloop.idle_iterator
 def clear_icon_cache_orphans():
     # delete icon_cache rows from the database with no associated
-    # item/feed/guide.
+    # item/feed/.
     removed_objs = []
     for ic in iconcache.IconCache.orphaned_view():
         logging.warn("No object for IconCache: %s.  Discarding", ic)

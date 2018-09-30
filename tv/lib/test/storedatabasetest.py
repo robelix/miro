@@ -17,7 +17,6 @@ from miro import item
 from miro import feed
 from miro import folder
 from miro import widgetstate
-from miro import guide
 from miro import schema
 from miro import signals
 from miro import tabs
@@ -423,7 +422,7 @@ class DiskTest(FakeSchemaTest):
         # Check that when we reload the database, the id counter stays the
         # same
         org_id = app.db_info.make_new_id()
-        # reload the database 
+        # reload the database
         self.reload_test_database()
         self.assertEquals(app.db_info.make_new_id(), org_id)
 
@@ -448,7 +447,7 @@ class DiskTest(FakeSchemaTest):
         self.handle_corruption_dialogs = corruption
 
     def handle_new_dialog(self, obj, dialog):
-        if (self.handle_upgrade_error_dialogs and 
+        if (self.handle_upgrade_error_dialogs and
             (dialogs.BUTTON_START_FRESH in dialog.buttons)):
             # handle database upgrade dialog
             dialog.run_callback(dialogs.BUTTON_START_FRESH)
@@ -661,7 +660,6 @@ class CorruptDDBObjectReprTest(StoreDatabaseTest):
             u'http://example.com/1/item1/movie.mpeg', self.item)
         self.item.set_downloader(self.downloader)
         self.tab_order = tabs.TabOrder(u'channel')
-        self.guide = guide.ChannelGuide(u'http://example.com/')
         self.theme_hist = theme.ThemeHistory()
         self.view_state = widgetstate.ViewState((u'testtype', u'testid', 0))
 
@@ -702,11 +700,6 @@ class CorruptDDBObjectReprTest(StoreDatabaseTest):
         # check that restore_tab_list() re-adds the tab ids
         reloaded.restore_tab_list()
         self.check_fixed_value(reloaded, 'tab_ids', [self.feed.id])
-
-    def test_corrupt_allowed_urls(self):
-        app.db.cursor.execute("UPDATE channel_guide "
-                "SET allowedURLs='[1, 2; 3 ]' WHERE id=?", (self.guide.id,))
-        self.check_fixed_value(self.guide, 'allowedURLs', [])
 
     def test_corrupt_past_themes(self):
         app.db.cursor.execute("UPDATE theme_history "

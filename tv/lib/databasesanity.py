@@ -42,7 +42,6 @@
 from miro import item
 from miro import feed
 from miro import signals
-from miro import guide
 
 class DatabaseInsaneError(StandardError):
     pass
@@ -116,7 +115,7 @@ class PhantomFeedTest(SanityTest):
 class SingletonTest(SanityTest):
     """Check that singleton DB objects are really singletons.
 
-    This is a baseclass for the channle guide test, manual feed test, etc.
+    This is a baseclass for the manual feed test, etc.
     """
     singleton_name = ""
 
@@ -153,11 +152,6 @@ class SingletonTest(SanityTest):
                     else:
                         seen_object = True
 
-class ChannelGuideSingletonTest(SingletonTest):
-    singleton_name = "Channel Guide"
-    def object_is_singleton(self, obj):
-        return isinstance(obj, guide.ChannelGuide) and obj.url is None
-
 class ManualFeedSingletonTest(SingletonTest):
     singleton_name = "Manual Feed"
     def object_is_singleton(self, obj):
@@ -187,7 +181,6 @@ def check_sanity(object_list, fix_if_possible=True, quiet=False,
     """
     tests = set([
         PhantomFeedTest(),
-        ChannelGuideSingletonTest(),
         ManualFeedSingletonTest(),
     ])
 

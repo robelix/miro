@@ -43,7 +43,6 @@ from miro import conversions
 from miro import downloader
 from miro import eventloop
 from miro import feed
-from miro import guide
 from miro import fileutil
 from miro import commandline
 from miro import item
@@ -67,7 +66,7 @@ from miro.plat.utils import make_url_safe, filename_to_unicode
 import shutil
 
 class ViewTracker(object):
-    """Handles tracking views for TrackGuides, TrackChannels, TrackPlaylists.
+    """Handles tracking views for TrackChannels, TrackPlaylists.
     """
     type = None
     info_factory = None
@@ -276,8 +275,7 @@ class PlaylistTracker(TabTracker):
         return tabs.TabOrder.playlist_order()
 
 class SimpleHideableTracker(ViewTracker):
-    """Tracker for guides and stores - hideable tabs that aren't nestable."""
-    info_factory = messages.GuideInfo
+    """Tracker for stores - hideable tabs that aren't nestable."""
 
     def get_initial_views(self):
         return self.get_object_views()
@@ -296,35 +294,6 @@ class SimpleHideableTracker(ViewTracker):
         message.root_expanded = root.get_expanded()
         message.send_to_frontend()
         self.reset_changes()
-
-class GuideTracker(SimpleHideableTracker):
-    type = 'site'
-    list_message = messages.GuideList
-
-    def get_object_views(self):
-        return (guide.ChannelGuide.site_view(),)
-
-    def get_initial_views(self):
-        return (guide.ChannelGuide.site_view(), guide.ChannelGuide.guide_view())
-
-class StoreTracker(SimpleHideableTracker):
-    type = 'store'
-    list_message = messages.StoreList
-
-    def get_object_views(self):
-        return (guide.ChannelGuide.visible_store_view(),)
-
-    def get_initial_views(self):
-        return (guide.ChannelGuide.store_view(),)
-
-    def send_messages(self):
-        message = messages.StoresChanged(
-            [self.info_factory(g) for g in self._get_added_objects()],
-            [self.info_factory(g) for g in self.changed.values()],
-            frozenset(self.removed))
-        message.send_to_frontend()
-
-        ViewTracker.send_messages(self)
 
 class WatchedFolderTracker(ViewTracker):
     info_factory = messages.WatchedFolderInfo
@@ -446,8 +415,6 @@ class BackendMessageHandler(messages.MessageHandler):
         self.frontend_startup_callback = frontend_startup_callback
         self.channel_tracker = None
         self.playlist_tracker = None
-        self.guide_tracker = None
-        self.store_tracker = None
         self.watched_folder_tracker = None
         self.download_count_tracker = None
         self.paused_count_tracker = None
@@ -480,8 +447,6 @@ class BackendMessageHandler(messages.MessageHandler):
             return ChannelFolder
         elif typ == 'playlist-folder':
             return PlaylistFolder
-        elif typ == 'site':
-            return guide.ChannelGuide
         else:
             raise ValueError("Unknown Type: %s" % typ)
 
@@ -505,20 +470,6 @@ class BackendMessageHandler(messages.MessageHandler):
         if self.channel_tracker:
             self.channel_tracker.unlink()
             self.channel_tracker = None
-
-    def handle_track_guides(self, message):
-        if not self.guide_tracker:
-            self.guide_tracker = GuideTracker()
-            self.store_tracker = StoreTracker()
-        self.guide_tracker.send_initial_list()
-        self.store_tracker.send_initial_list()
-
-    def handle_stop_tracking_guides(self, message):
-        if self.guide_tracker:
-            self.guide_tracker.unlink()
-            self.guide_tracker = None
-            self.store_tracker.unlink()
-            self.store_tracker = None
 
     def handle_track_watched_folders(self, message):
         if not self.watched_folder_tracker:
@@ -758,16 +709,6 @@ class BackendMessageHandler(messages.MessageHandler):
         else:
             playlist.remove()
 
-    def handle_delete_site(self, message):
-        try:
-            site = guide.ChannelGuide.get_by_id(message.id)
-        except database.ObjectNotFoundError:
-            logging.warn("site not found: %s" % message.id)
-        else:
-            if site.is_default():
-                raise ValueError("Can't delete default site")
-            site.remove()
-
     def handle_tabs_reordered(self, message):
         # The frontend already has the channels in the correct order and with
         # the correct parents.  Don't send it updates based on the backend
@@ -838,21 +779,6 @@ New ids: %s""", playlist_item_ids, message.item_ids)
             return
         # signal_change() implicit in reorder()
         playlist.reorder(message.item_ids)
-
-    def handle_new_guide(self, message):
-        url = message.url
-        if guide.get_guide_by_url(url) is None:
-            guide.ChannelGuide(url, [u'*'])
-
-    def handle_set_guide_visible(self, message):
-        g = guide.ChannelGuide.get_by_id(message.id)
-        if not g.store:
-            return
-        if message.visible:
-            g.store = g.STORE_VISIBLE
-        else:
-            g.store = g.STORE_INVISIBLE
-        g.signal_change()
 
     def handle_new_feed(self, message):
         url = message.url
@@ -1156,7 +1082,7 @@ New ids: %s""", playlist_item_ids, message.item_ids)
                 i.set_user_metadata({u'kind': kind})
         finally:
             app.bulk_sql_manager.finish()
-        
+
     def handle_save_item_as(self, message):
         try:
             item_ = item.Item.get_by_id(message.id)
@@ -1411,7 +1337,6 @@ New ids: %s""", playlist_item_ids, message.item_ids)
         info = message.info
         state = GlobalState.get_singleton()
         state.item_details_expanded = info.item_details_expanded
-        state.guide_sidebar_expanded = info.guide_sidebar_expanded
         state.tabs_width = int(info.tabs_width)
         state.signal_change()
 
@@ -1422,7 +1347,7 @@ New ids: %s""", playlist_item_ids, message.item_ids)
             display_info = messages.DisplayInfo(key, display)
             states.append(display_info)
         return states
-        
+
     def _get_view_states(self):
         states = []
         for view in ViewState.make_view():

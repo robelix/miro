@@ -176,7 +176,7 @@ def get_next_id(cursor):
     for table in get_object_tables(cursor):
         # skip tables that don't store DDBObjects
         if table.startswith('item_fts'):
-            continue 
+            continue
         try:
             cursor.execute("SELECT MAX(id) from %s" % table)
         except sqlite3.OperationalError:
@@ -1336,8 +1336,7 @@ def upgrade71(objectList):
                  enclosure['type'].startswith(u'audio/') or
                  enclosure['type'] == u"application/ogg" or
                  enclosure['type'] == u"application/x-annodex" or
-                 enclosure['type'] == u"application/x-bittorrent" or
-                 enclosure['type'] == u"application/x-shockwave-flash") and
+                 enclosure['type'] == u"application/x-bittorrent") and
                 (enclosure['type'] not in UNSUPPORTED_MIMETYPES))
 
     def is_allowed_filename(filename):
@@ -1513,19 +1512,9 @@ def upgrade71(objectList):
     return changed
 
 def upgrade72(objectList):
-    """We upgraded the database wrong in upgrade64, inadvertently
-    adding a str to the allowedURLs list when it should be unicode.
-    This converts that final str to unicode before the database sanity
-    check catches us.
+    """removed
     """
     changed = set()
-    for o in objectList:
-        if o.classString == 'channel-guide':
-            if o.savedData['allowedURLs'] and isinstance(
-                o.savedData['allowedURLs'][-1], str):
-                o.savedData['allowedURLs'][-1] = unicode(
-                    o.savedData['allowedURLs'][-1])
-                changed.add(o)
     return changed
 
 def upgrade73(objectList):
@@ -1629,8 +1618,7 @@ def upgrade75(objectList):
                  enclosure['type'].startswith(u'audio/') or
                  enclosure['type'] == u"application/ogg" or
                  enclosure['type'] == u"application/x-annodex" or
-                 enclosure['type'] == u"application/x-bittorrent" or
-                 enclosure['type'] == u"application/x-shockwave-flash") and
+                 enclosure['type'] == u"application/x-bittorrent") and
                 (enclosure['type'] not in UNSUPPORTED_MIMETYPES))
 
     def is_allowed_filename(filename):
@@ -3146,7 +3134,7 @@ def upgrade134(cursor):
     for data in items:
         cursor.execute("UPDATE item SET album=?, artist=?, title_tag=?,"
             "track=?, year=?, genre=? WHERE id=?", data)
- 
+
 def upgrade135(cursor):
     """Basic metadata versioning
     """
@@ -4088,7 +4076,7 @@ def upgrade188(cursor):
         'feed_impl', 'rss_feed_impl', 'saved_search_feed_impl',
         'scraper_feed_impl', 'search_feed_impl', 'directory_watch_feed_impl',
         'directory_feed_impl', 'search_downloads_feed_impl',
-        'manual_feed_impl', 
+        'manual_feed_impl',
     ]
     for table_name in feed_impl_table_names:
         cursor.execute("UPDATE %s SET title=NULL "
@@ -4116,7 +4104,7 @@ def upgrade189(cursor):
         'feed_impl', 'rss_feed_impl', 'saved_search_feed_impl',
         'scraper_feed_impl', 'search_feed_impl', 'directory_watch_feed_impl',
         'directory_feed_impl', 'search_downloads_feed_impl',
-        'manual_feed_impl', 
+        'manual_feed_impl',
     ]
     def get_feed_impl_info(feed_impl_id):
         for table_name in feed_impl_table_names:

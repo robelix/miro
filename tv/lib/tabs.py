@@ -32,7 +32,6 @@
 
 from miro import app
 from miro import database
-from miro import guide
 from miro import feed
 from miro import folder
 from miro import playlist
@@ -79,9 +78,7 @@ class TabOrder(database.DDBObject):
         self._add_untracked_ids()
 
     def _get_tab_views(self):
-        if self.type == u'site':
-            tab_views = (guide.ChannelGuide.site_view(),)
-        elif self.type == u'channel':
+        if self.type == u'channel':
             tab_views = (feed.Feed.visible_view(),
                          folder.ChannelFolder.make_view())
         elif self.type == u'playlist':

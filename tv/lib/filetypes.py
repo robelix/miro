@@ -109,8 +109,7 @@ def is_download_mimetype(mimetype):
                         'audio/x-amzxml')
 
 def is_download_url(url):
-    from miro import emusic, amazon
-    return emusic.is_emusic_url(url) or amazon.is_amazon_url(url)
+    return False
 
 def is_allowed_filename(filename):
     """
@@ -200,8 +199,7 @@ def _has_video_type(enclosure):
                  or enclosure['type'] == u"application/ogg"
                  or enclosure['type'] == u"application/x-annodex"
                  or enclosure['type'] == u"application/x-bittorrent"
-                 or enclosure['type'] == u"application/x-magnet"
-                 or enclosure['type'] == u"application/x-shockwave-flash")
+                 or enclosure['type'] == u"application/x-magnet")
             and (enclosure['type'] not in UNSUPPORTED_MIMETYPES))
 
 def _has_video_extension(enclosure, key):
@@ -216,7 +214,7 @@ def is_feed_content_type(content_type):
 
     feed_types = [u'application/rdf+xml', u'application/atom+xml',
                   u'application/rss+xml', u'application/podcast+xml',
-                  u'text/xml', u'application/xml', 
+                  u'text/xml', u'application/xml',
                   ]
     for type_ in feed_types:
         if content_type.startswith(type_):

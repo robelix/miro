@@ -1144,7 +1144,7 @@ class SharingPanel(PanelBuilder):
         for w in widgets:
             if value or (not value and w is main):
                 w.enable()
- 
+
     def install_bonjour_clicked(self, button):
         call_on_ui_thread(install_bonjour)
 
@@ -1253,69 +1253,6 @@ class ConversionsPanel(PanelBuilder):
         pack_extras(vbox, "conversions")
 
         return vbox
-
-class StoreHelper(object):
-    def __init__(self, height=120):
-        self._table = widgetset.TableView(app.store_manager.model)
-        store_cell_renderer = widgetset.CellRenderer()
-        store_cell_renderer.set_text_size(widgetconst.SIZE_SMALL)
-        store_column = widgetset.TableColumn(
-            _('Store'), store_cell_renderer, value=1)
-        store_column.set_min_width(400)
-        checkbox_cell_renderer = widgetset.CheckboxCellRenderer()
-        checkbox_cell_renderer.set_control_size(widgetconst.SIZE_SMALL)
-        checkbox_cell_renderer.connect('clicked', self._on_visible_clicked)
-        visible_column = widgetset.TableColumn(
-            _('Visible'), checkbox_cell_renderer, value=2)
-        visible_column.set_min_width(50)
-        self._table.add_column(store_column)
-        self._table.add_column(visible_column)
-        self._table.set_fixed_height(True)
-        self._table.allow_multiple_select = False
-        self._table.set_alternate_row_backgrounds(True)
-        scroller = widgetset.Scroller(False, True)
-        scroller.set_has_borders(True)
-        scroller.add(self._table)
-        scroller.set_size_request(-1, height)
-        self.store_list = widgetset.VBox()
-        self.store_list.pack_start(scroller)
-        self._changed_signal = None
-
-    def connect_signals(self):
-        if self._changed_signal is None:
-            self._changed_signal = app.store_manager.connect(
-                'changed', self._on_stores_changed)
-
-    def disconnect_signals(self):
-        if self._changed_signal is not None:
-            app.store_manager.disconnect(self._changed_signal)
-            self._changed_signal = None
-
-    def _on_stores_changed(self, manager):
-        self._table.model_changed()
-
-    def _on_visible_clicked(self, renderer, iter_):
-        row = app.store_manager.model[iter_]
-        new_value = not row[2]
-        self._table.model.update_value(iter_, 2, new_value)
-        app.store_manager.change_visible(row[0], new_value)
-
-
-class StoresPanel(PanelBuilder):
-    def build_widget(self):
-        grid = dialogwidgets.ControlGrid()
-        self.store_helper = StoreHelper()
-
-        grid.pack_label(_('MP3 stores:'), span=2)
-        grid.end_line(spacing=0)
-        grid.pack(self.store_helper.store_list, pad_right=12)
-        return grid.make_table()
-
-    def on_window_open(self):
-        self.store_helper.connect_signals()
-
-    def on_window_closed(self):
-        self.store_helper.disconnect_signals()
 
 class _ExtensionsHelper(object):
     def __init__(self):
@@ -1471,8 +1408,6 @@ add_panel("sharing", gettext_lazy("Sharing"), SharingPanel,
           'images/pref_tab_sharing.png')
 add_panel("conversions", gettext_lazy("Conversions"), ConversionsPanel,
           'images/pref_tab_conversions.png')
-add_panel("stores", gettext_lazy("Stores"), StoresPanel,
-          'images/pref_tab_stores.png')
 add_panel("extensions", gettext_lazy("Extensions"), ExtensionsPanel,
           'images/pref_tab_extensions.png')
 

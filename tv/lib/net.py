@@ -50,9 +50,9 @@ from miro import trapcall
 from miro.clock import clock
 from miro.gtcache import gettext as _
 
-SOCKET_READ_TIMEOUT = 60
-SOCKET_INITIAL_READ_TIMEOUT = 30
-SOCKET_CONNECT_TIMEOUT = 15
+SOCKET_READ_TIMEOUT = 240
+SOCKET_INITIAL_READ_TIMEOUT = 120
+SOCKET_CONNECT_TIMEOUT = 120
 
 # socket.ssl is deprecated as of Python 2.6, so we use socket_ssl for
 # pre Python 2.6 and ssl.wrap_socket for Python 2.6 and later.

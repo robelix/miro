@@ -65,9 +65,6 @@ class Controller:
         if app.local_metadata_manager is not None:
             logging.info("Sending pending metadata updates")
             app.local_metadata_manager.run_updates()
-        logging.info("Shutting down donation manager")
-        if app.donate_manager is not None:
-            app.donate_manager.shutdown()
         logging.info("Shutting down video conversions manager")
         conversions.conversion_manager.shutdown()
         logging.info("Shutting down Downloader...")

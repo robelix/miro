@@ -352,4 +352,3 @@ class Importer(object):
         else:
             folder['children'] = []
         return folder
-

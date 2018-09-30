@@ -111,7 +111,6 @@ USE_DHT                     = Pref(key='useDht',                default=True,  p
 BT_ENC_REQ                  = Pref(key='BitTorrentEncReq',      default=False, platformSpecific=False)
 CHANNEL_AUTO_DEFAULT        = Pref(key='ChannelAutoDefault',    default=u"new", platformSpecific=False)
 BONJOUR_REQUEST_COUNT       = Pref(key='bonjourRequestCount',   default=0,     platformSpecific=False)
-FLASH_REQUEST_COUNT         = Pref(key='flashRequestCount',     default=0,     platformSpecific=False)
 ENABLE_SUBTITLES            = Pref(key='enableSubtitles',       default=False, platformSpecific=False)
 SUBTITLE_ENCODING           = Pref(key='subtitleEncoding',      default=None,  platformSpecific=False)
 SUBTITLE_FONT               = Pref(key='subtitleFont',          default=None,  platformSpecific=False)
@@ -156,10 +155,6 @@ def get_from_environ(key, default):
 
     return default
 
-default_guide = get_from_environ('DTV_CHANNELGUIDE_URL',
-                                 u'http://www.miroguide.com/')
-default_guide_first_time = get_from_environ('DTV_CHANNELGUIDE_FIRST_TIME_URL',
-                                            u'http://www.miroguide.com/firsttime')
 default_share = get_from_environ('DTV_SHARE_URL',
                                  u'http://www.miroguide.com/share')
 default_autoupdate = get_from_environ(
@@ -171,17 +166,6 @@ default_autoupdate_beta = get_from_environ(
     u'http://miro-updates.participatoryculture.org/democracy-appcast-beta.xml')
 
 
-CHANNEL_GUIDE_URL = Pref(key='ChannelGuideURL', default=default_guide,
-                         platformSpecific=False)
-CHANNEL_GUIDE_FIRST_TIME_URL = Pref(key='ChannelGuideFirstTimeURL', default=default_guide_first_time,
-                         platformSpecific=False)
-CHANNEL_GUIDE_ALLOWED_URLS = Pref(key='ChannelGuideAllowedURLs',
-                              default='http://pagead2.googlesyndication.com/ '
-                              'http://www.google.com/ '
-                              'http://www.googleadservices.com',
-                              platformSpecific=False)
-ADDITIONAL_CHANNEL_GUIDES = Pref(key='additionalChannelGuides', default='',
-                                  platformSpecific=False)
 SHARE_URL         = Pref(key='ShareURL',        default=default_share,
                          platformSpecific=False)
 # this is for final releases
@@ -310,7 +294,7 @@ OPEN_FOLDER_ON_STARTUP = \
 OPEN_CHANNEL_ON_STARTUP = \
     Pref(key='openChannelOnStartup',default=None, platformSpecific=False)
 DISABLE_IPV6 = \
-    Pref(key='disableIPV6',default=True, platformSpecific=False)
+    Pref(key='disableIPV6',default=True, platformSpecific=True)
 
 def all_prefs():
     return [obj for obj in globals().values() if isinstance(obj, Pref)]

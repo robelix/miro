@@ -30,6 +30,8 @@
 """``miro.frontends.widgets.window`` -- Main Miro widget.
 """
 
+import logging
+
 from miro import app
 from miro import prefs
 
@@ -43,13 +45,17 @@ class MiroWindow(widgetset.MainWindow):
     """The main Miro Window.
     """
     def __init__(self, title, rect):
+        logging.debug('window.py MiroWindow.__init__ start')
         widgetset.MainWindow.__init__(self, title, rect)
 
         self.main_area_holder = widgetutil.WidgetHolder()
         self.splitter = widgetset.Splitter()
+        logging.debug('window.py MiroWindow.__init__ add tablistbox')
         self.splitter.set_left(tablist.TabListBox())
+        logging.debug('window.py MiroWindow.__init__ add main_area_older')
         self.splitter.set_right(self.main_area_holder)
 
+        logging.debug('window.py MiroWindow.__init__ add videobox')
         hbox = widgetset.HBox()
         self.videobox = videobox.VideoBox()
         hbox.pack_end(self.videobox, expand=True)
@@ -60,8 +66,10 @@ class MiroWindow(widgetset.MainWindow):
         vbox.pack_end(hbox)
         self.main_vbox = vbox
 
+        logging.debug('window.py MiroWindow.__init__ set_content_widget')
         self.set_content_widget(vbox)
         self.connect("active-change", self.on_active_change)
+        logging.debug('window.py MiroWindow.__init__ activechange done')
 
         try:
             left_width = int(app.config.get(prefs.LEFT_VIEW_SIZE))
@@ -72,6 +80,7 @@ class MiroWindow(widgetset.MainWindow):
             # defaults to None.
             left_width = 200
         self.splitter.set_left_width(left_width)
+        logging.debug('window.py MiroWindow.__init__ done')
 
     def get_next_tab_focus(self, current, is_forward):
         tab_list = app.tabs.get_view()

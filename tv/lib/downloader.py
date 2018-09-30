@@ -49,7 +49,6 @@ from miro import httpclient
 from miro import models
 from miro import prefs
 from miro.plat.utils import samefile, unicode_to_filename
-from miro import flashscraper
 from miro import fileutil
 from miro import util
 from miro.fileobject import FilenameType
@@ -125,6 +124,7 @@ class DownloadStateManager(object):
             return None
 
     def add_download(self, dlid, downloader):
+        logging.debug("Downloadstatemanager add_download %s", dlid)
         self.downloads[dlid] = downloader
 
     def delete_download(self, dlid):
@@ -139,6 +139,7 @@ class DownloadStateManager(object):
         return self.daemon_starter and self.daemon_starter.started
 
     def queue(self, identifier, cmd, args):
+        logging.debug("Downloadstatemanager queue %s", identifier)
         if not self.downloads.has_key(identifier):
             raise ValueError('add_download() not called before queue()')
 
@@ -568,9 +569,13 @@ class RemoteDownloader(DDBObject):
     def run_downloader(self):
         """This is the actual download thread.
         """
-        flashscraper.try_scraping_url(self.url, self._run_downloader)
+        # the reason why this is split in two functions
+        # here was flashscraper with callback:
+        # flashscraper.try_scraping_url(self.url, self._run_downloader)
+        self._run_downloader(self.url)
 
     def _run_downloader(self, url, content_type=None, title=None):
+        # still needed?
         if not self.id_exists():
             # we got deleted while we were doing the flash scraping
             return
@@ -596,7 +601,7 @@ class RemoteDownloader(DDBObject):
         else:
             self.state = u'failed'
             self.short_reason_failed = _('File not found')
-            self.reason_failed = _('Flash URL Scraping Error')
+            self.reason_failed = _('xlash URL Scraping Error')
         self.signal_change()
 
     def pause(self):

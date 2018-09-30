@@ -302,9 +302,6 @@ def get_app_menu():
                              "About")
                     ])
 
-    if app.config.get(prefs.DONATE_URL):
-        help_menu.append(MenuItem(_("Donate"), "Donate"))
-
     if app.config.get(prefs.HELP_URL):
         help_menu.append(MenuItem(_("Help"), "Help", Shortcut(F1)))
     help_menu.append(Separator())
@@ -375,10 +372,6 @@ class DevMenu(Menu):
         print '-' * 50
         subprocess.call([enmfp_info['path']], env=enmfp_info.get('env'))
         print '-' * 50
-
-    @menu_item(_("Run Donate Manager Power Toys"))
-    def on_run_donate_manager_powertoys(menu_item):
-        app.donate_manager.run_powertoys()
 
     @menu_item(_("Image Render Test"))
     def on_image_render_test(menu_item):
@@ -499,7 +492,7 @@ def lookup_handler(action_name):
     """For a given action name, get a callback to handle it.  Return
     None if no callback is found.
     """
-    
+
     retval = _lookup_group_handler(action_name)
     if retval is None:
         retval = action_handlers.get(action_name)
@@ -718,10 +711,6 @@ def on_toggle_column(name):
 @action_handler("About")
 def on_about():
     app.widgetapp.about()
-
-@action_handler("Donate")
-def on_donate():
-    app.widgetapp.open_url(app.config.get(prefs.DONATE_URL))
 
 @action_handler("Help")
 def on_help():
