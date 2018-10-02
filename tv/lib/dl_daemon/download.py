@@ -901,13 +901,11 @@ class HTTPDownloader(BGDownloader):
         self.update_client()
 
     def get_status(self):
-        logging.debug("HTTPDownloader get_status %s", self.url)
         data = BGDownloader.get_status(self)
         data['type'] = 'HTTP'
         return data
 
     def update_stats(self):
-        logging.debug("HTTPDownloader update_stats %s", self.url)
         """Update the download rate and eta based on receiving length
         bytes.
         """

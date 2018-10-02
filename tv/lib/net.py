@@ -151,8 +151,8 @@ class NetworkBuffer(object):
         return rv
 
     def readline(self):
-        """Like a file readline, with several difference:  
-        * If there isn't a full line ready to be read we return None.  
+        """Like a file readline, with several difference:
+        * If there isn't a full line ready to be read we return None.
         * Doesn't include the trailing line separator.
         * Both "\r\n" and "\n" act as a line ender
         """
@@ -240,7 +240,7 @@ class AsyncSocket(object):
 
     def _pick_address(self, addresses):
         """Pick the best entry to use from a list of addresses
-        
+
         :param addresses: list of address tuples returned by getaddrinfo()
         :returns: one of the tuples, or None if no address could be found
         """
@@ -376,7 +376,7 @@ class AsyncSocket(object):
 
     def send_data(self, data, callback=None):
         """Send data out to the socket when it becomes ready.
-        
+
         NOTE: currently we have no way of detecting when the data gets sent
         out, or if errors happen.
         """
@@ -535,7 +535,7 @@ class AsyncSSLStream(AsyncSocket):
             if self.interruptedOperation is None:
                 self.interruptedOperation = operation
             elif self.interruptedOperation != operation:
-                signals.system.failed("When talking to the network", 
+                signals.system.failed("When talking to the network",
                 details="socket error for the wrong SSL operation")
                 self.close_connection()
                 return

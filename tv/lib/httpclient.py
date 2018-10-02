@@ -227,10 +227,11 @@ class TransferOptions(object):
         self.post_length = 0
 
     def parse_url(self):
+        logging.debug("TransferOptions parse_url %s", self.url)
         self.scheme = self.host = _('Unknown')
         if self.url is None:
             self.invalid_url = True
-            return 
+            return
         try:
             self.url = self.url.encode("ascii")
         except UnicodeError:
@@ -245,6 +246,7 @@ class TransferOptions(object):
             return
 
     def build_handle(self, out_headers):
+        logging.debug("TransferOptions build_handle %s", out_headers)
         """Build a libCURL handle.  This should only be called inside the
         LibCURLManager thread.
         """
@@ -261,6 +263,7 @@ class TransferOptions(object):
         return handle
 
     def _init_handle(self):
+        logging.debug("TransferOptions init_handle")
         handle = pycurl.Curl()
         handle.setopt(pycurl.USERAGENT, user_agent())
         handle.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -284,6 +287,7 @@ class TransferOptions(object):
         return handle
 
     def _setup_proxy(self, handle):
+        logging.debug("TransferOptions _setup_proxy %s", handle)
         if not app.config.get(prefs.HTTP_PROXY_ACTIVE):
             return
 
@@ -304,11 +308,13 @@ class TransferOptions(object):
                     _logged_noproxy_error = True
 
     def _setup_headers(self, handle, out_headers):
+        logging.debug("TransferOptions _setup_headers %s", out_headers)
         headers = ['%s: %s' % (str(k), str(out_headers[k]))
                    for k in out_headers]
         handle.setopt(pycurl.HTTPHEADER, headers)
 
     def _setup_post(self, handle, out_headers):
+        logging.debug("TransferOptions _setup_post %s", out_headers)
         data = None
         if self.post_files is not None:
             (data, boundary) = multipart_encode(self.post_vars,
@@ -337,6 +343,7 @@ class CurlTransfer(object):
 
     def __init__(self, options, callback, errback, header_callback=None,
             content_check_callback=None):
+        logging.debug("CurlTransfer __init__")
         """Create a CurlTransfer object.
 
         :param options: TransferOptions object.  The object shouldn't be
@@ -359,6 +366,7 @@ class CurlTransfer(object):
         self.lock = threading.Lock()
 
     def _reset_transfer_data(self):
+        logging.debug("CurlTransfer _reset_transfer_data")
         self.headers = {}
         self.handle = None
         self.current_auth_type = None
@@ -373,10 +381,12 @@ class CurlTransfer(object):
         self.saw_head_success = False
 
     def _send_new_request(self):
+        logging.debug("CurlTransfer _send_new_request")
         self._reset_transfer_data()
         curl_manager.add_transfer(self)
 
     def start(self):
+        logging.debug("CurlTransfer start %s", self.options.url)
         if self.options.invalid_url:
             self.call_errback(MalformedURL(self.options.url))
             return
@@ -390,20 +400,24 @@ class CurlTransfer(object):
             raise
 
     def cancel(self, remove_file):
+        logging.debug("CurlTransfer cancel %s", self.options.url)
         curl_manager.remove_transfer(self, remove_file)
         self.canceled = True
 
     def handle_http_auth(self):
+        logging.debug("CurlTransfer handle_http_auth %s", self.options.url)
         url = self.options.url
         location = (_("Website"), url)
         self._handle_auth('http', 'www-authenticate', url, location)
 
     def handle_proxy_auth(self):
+        logging.debug("CurlTransfer handle_proxy_auth %s", self.options.url)
         url = _proxy_auth_url()
         location = (_("Proxy"), url)
         self._handle_auth('proxy', 'proxy-authenticate', url, location)
 
     def handle_auth_failure(self):
+        logging.debug("CurlTransfer handle_auth_failure %s", self.options.url)
         if self.current_auth_type == 'http':
             self.call_errback(AuthorizationFailed())
         elif self.current_auth_type == 'proxy':
@@ -415,6 +429,7 @@ class CurlTransfer(object):
 
     @eventloop.as_idle
     def _handle_auth(self, auth_type, header_key, url, location):
+        logging.debug("CurlTransfer handle_auth %s", url)
         # this method needs to run in the eventloop because it uses the
         # httpauth module.  At this point the transfer is removed from
         # curl_manager's, so we don't have to worry about accessing our
@@ -449,6 +464,7 @@ class CurlTransfer(object):
             self.handle_auth_failure()
 
     def _ask_for_http_auth_callback(self, auth):
+        logging.debug("CurlTransfer handle_auth_callback %s", self.options.url)
         if self.canceled:
             return
         if auth is None:
@@ -461,6 +477,7 @@ class CurlTransfer(object):
             self._send_new_request()
 
     def build_handle(self):
+        logging.debug("CurlTransfer build_handle %s", self.options.url)
         """Build a libCURL handle.  This should only be called inside the
         LibCURLManager thread.
         """
@@ -475,7 +492,7 @@ class CurlTransfer(object):
         elif self.options.write_file is not None:
             if not self.saw_head_success:
                 # try a HEAD request first to see if the request will work.
-                # It avoids the issue of RESUME_FROM being applied to the 
+                # It avoids the issue of RESUME_FROM being applied to the
                 # error response.
                 self.handle.setopt(pycurl.NOBODY, 1)
                 self.trying_head_request = True
@@ -492,12 +509,15 @@ class CurlTransfer(object):
             logging.warn("debugging request: %s", self.options.url)
             self.handle.setopt(pycurl.VERBOSE, 1)
             self.handle.setopt(pycurl.DEBUGFUNCTION, self.debug_func)
+        logging.debug("CurlTransfer build_handle END %s", self.options.url)
 
     def _write_file(self, buf):
+        logging.debug("CurlTransfer _write_file %s", self.options.url)
         if self.check_response_code(self.status_code):
             self._filehandle.write(buf)
 
     def _lookup_auth(self):
+        logging.debug("CurlTransfer lookup_auth %s", self.options.url)
         """Lookup existing HTTP passwords to use.
 
         We need to do this before we are running in the libcurl thread because
@@ -507,6 +527,7 @@ class CurlTransfer(object):
         self.proxy_auth = httpauth.find_http_auth(_proxy_auth_url())
 
     def _setup_http_auth(self):
+        logging.debug("CurlTransfer _setup_http_auth %s", self.options.url)
         if self.http_auth is not None:
             if self.http_auth.scheme == 'basic':
                 self.handle.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
@@ -521,6 +542,7 @@ class CurlTransfer(object):
                         self.http_auth.password)))
 
     def _setup_proxy_auth(self):
+        logging.debug("CurlTransfer _setup_proxy_auth %s", self.options.url)
         # first try passwords stored by miro.  proxy_auth was setup in
         # _lookup_auth()
         if self.proxy_auth is not None:
@@ -533,8 +555,10 @@ class CurlTransfer(object):
                 self.handle.setopt(pycurl.PROXYUSERPWD, '%s:%s' % (
                     str(app.config.get(prefs.HTTP_PROXY_AUTHORIZATION_USERNAME)),
                     str(app.config.get(prefs.HTTP_PROXY_AUTHORIZATION_PASSWORD))))
+        logging.debug("CurlTransfer _setup_proxy_auth END %s", self.options.url)
 
     def _call_content_check(self, data):
+        logging.debug("CurlTransfer _call_content_check %s", self.options.url)
         self.buffer.write(data)
         rv = trap_call('content check callback', self.content_check_callback,
                 self.buffer.getvalue())
@@ -542,6 +566,7 @@ class CurlTransfer(object):
             curl_manager.remove_transfer(self)
 
     def _open_file(self):
+        logging.debug("CurlTransfer _open_file %s", self.options.url)
         if self.options.resume:
             mode = 'ab'
             try:
@@ -577,6 +602,7 @@ class CurlTransfer(object):
 
 
     def header_func(self, line):
+        logging.debug("CurlTransfer header_func %s", line)
         line = line.strip()
         if line.startswith("HTTP"):
             # we can't use self.header.getinfo() because we're inside the
@@ -638,12 +664,14 @@ class CurlTransfer(object):
             self.headers[header] += (',%s' % value)
 
     def on_headers_finished(self):
+        logging.debug("CurlTransfer on_headers_finished %s", self.options.url)
         if self.header_callback:
             eventloop.add_idle(self.header_callback,
                     'httpclient header callback',
                     args=(self._make_callback_info(),))
 
     def check_response_code(self, code):
+        logging.debug("CurlTransfer check_response_code %s", code)
         expected_codes = set([200])
         if self.options.resume:
             expected_codes.add(206)
@@ -652,6 +680,7 @@ class CurlTransfer(object):
         return code in expected_codes
 
     def _make_callback_info(self):
+        logging.debug("CurlTransfer _make_callback_info %s", self.options.url)
         info = self.headers.copy()
         info['status'] = self.handle.getinfo(pycurl.RESPONSE_CODE)
         if 'content-length' in info:
@@ -669,10 +698,12 @@ class CurlTransfer(object):
         return info
 
     def _write_func_abort(self, bytes_):
+        logging.debug("CurlTransfer _write_func_abort %s", self.options.url)
         curl_manager.remove_transfer(self)
         curl_manager.call_after_perform(self.on_finished)
 
     def on_finished(self):
+        logging.debug("CurlTransfer on_finished %s", self.options.url)
         info = self._make_callback_info()
         self.last_url = self.handle.getinfo(pycurl.EFFECTIVE_URL)
         if self.options.write_file is None:
@@ -727,6 +758,7 @@ class CurlTransfer(object):
             self.call_errback(UnexpectedStatusCode(info['status']))
 
     def on_cancel(self, remove_file):
+        logging.debug("CurlTransfer on_cancel %s", self.options.url)
         self._cleanup_filehandle()
         if remove_file and self.options.write_file:
             try:
@@ -735,6 +767,7 @@ class CurlTransfer(object):
                 pass
 
     def find_value_from_header(self, header, target):
+        logging.debug("CurlTransfer find_value_from_header %s", header)
         """Finds a value from a response header that uses key=value pairs with
         the ';' char as a separator.  This is how content-disposition and
         content-type work.
@@ -750,6 +783,7 @@ class CurlTransfer(object):
         return None
 
     def calc_charset(self):
+        logging.debug("CurlTransfer calc_charset %s", self.options.url)
         try:
             content_type = self.headers['content-type']
         except KeyError:
@@ -761,6 +795,7 @@ class CurlTransfer(object):
         return 'iso-8859-1'
 
     def calc_filename(self, redirected_url):
+        logging.debug("CurlTransfer calc_filename %s", redirected_url)
         try:
             disposition = self.headers['content-disposition']
         except KeyError:
@@ -769,10 +804,11 @@ class CurlTransfer(object):
             filename = self.find_value_from_header(disposition, 'filename')
             if filename is not None:
                 return download_utils.clean_filename(filename)
-        return download_utils.filename_from_url(util.unicodify(redirected_url), 
+        return download_utils.filename_from_url(util.unicodify(redirected_url),
                 clean=True)
 
     def on_error(self, code, handle):
+        logging.debug("CurlTransfer on_error %s", code)
         if code in (pycurl.E_URL_MALFORMAT, pycurl.E_UNSUPPORTED_PROTOCOL):
             error = MalformedURL(self.options.url)
         elif code == pycurl.E_COULDNT_CONNECT:
@@ -806,21 +842,25 @@ class CurlTransfer(object):
         self.call_errback(error)
 
     def call_callback(self, info):
+        logging.debug("CurlTransfer call_callback %s", info)
         self._cleanup_filehandle()
         msg = 'curl transfer callback: %s' % (self.callback,)
         eventloop.add_idle(self.callback, msg, args=(info,))
 
     def call_errback(self, error):
+        logging.debug("CurlTransfer call_errback %s", error)
         self._cleanup_filehandle()
         msg = 'curl transfer errback: %s' % (self.errback,)
         eventloop.add_idle(self.errback, msg, args=(error,))
 
     def _cleanup_filehandle(self):
+        logging.debug("CurlTransfer _cleanup_filehandle %s", self.options.url)
         if self._filehandle is not None:
             self._filehandle.close()
             self._filehandle = None
 
     def build_stats(self):
+        logging.debug("CurlTransfer build_stats %s", self.options.url)
         stats = TransferStats()
         getinfo = self.handle.getinfo # for easy typing
 
@@ -835,9 +875,11 @@ class CurlTransfer(object):
         stats.status_code = self.status_code
         stats.initial_size = self.resume_from
 
+        logging.debug("CurlTransfer build_stats END %s", self.options.url)
         return stats
 
     def update_stats(self):
+        logging.debug("CurlTransfer update_stats %s", self.options.url)
         new_stats = self.build_stats()
         self.lock.acquire()
         try:
@@ -883,6 +925,7 @@ class LibCURLManager(eventloop.SimpleEventLoop):
     """
 
     def __init__(self):
+        logging.debug("LibCURLManager __init__")
         eventloop.SimpleEventLoop.__init__(self)
         self.multi = pycurl.CurlMulti()
         self.transfer_map = {}
@@ -891,17 +934,20 @@ class LibCURLManager(eventloop.SimpleEventLoop):
         self.after_perform_callbacks = []
 
     def start(self):
+        logging.debug("LibCURLManager start")
         self.thread = threading.Thread(target=utils.thread_body,
                                        args=[self.loop],
                                        name="LibCURL Event Loop")
         self.thread.start()
 
     def stop(self):
+        logging.debug("LibCURLManager stop")
         self.quit_flag = True
         self.wakeup()
         self.thread.join()
 
     def loop(self):
+        logging.debug("LibCURLManager loop")
         eventloop.SimpleEventLoop.loop(self)
         for transfer in self.transfer_map.values():
             self.multi.remove_handle(transfer.handle)
@@ -909,14 +955,17 @@ class LibCURLManager(eventloop.SimpleEventLoop):
         self.multi.close()
 
     def add_transfer(self, transfer):
+        logging.debug("LibCURLManager add_transfer")
         self.transfers_to_add.put(transfer)
         self.wakeup()
 
     def remove_transfer(self, transfer, remove_file=False):
+        logging.debug("LibCURLManager remove_transfer")
         self.transfers_to_remove.put((transfer, remove_file))
         self.wakeup()
 
     def call_after_perform(self, callback):
+        logging.debug("LibCURLManager call_after_perform")
         self.after_perform_callbacks.append(callback)
 
     def calc_fds(self):
@@ -1015,6 +1064,7 @@ class HTTPClient(object):
 
 
 def sanitize_url(url):
+    logging.debug("HTTPClient sanitize_url %s", url)
     """Fix poorly constructed URLs.
 
     The main use case for this is to replace " " characters with "%20"
@@ -1064,6 +1114,8 @@ def grab_url(url, callback, errback, header_callback=None,
 
     :returns HTTPClient object
     """
+    logging.debug("HTTPClient grab_url %s", url)
+
     url = sanitize_url(url)
     if url.startswith("file://"):
         return _grab_file_url(url, callback, errback, default_mime_type)
@@ -1076,6 +1128,7 @@ def grab_url(url, callback, errback, header_callback=None,
         return HTTPClient(transfer)
 
 def _grab_file_url(url, callback, errback, default_mime_type):
+    logging.debug("HTTPClient grab_file_url %s", url)
     path = download_utils.get_file_url_path(url)
     try:
         f = file(path)
@@ -1098,6 +1151,7 @@ def _grab_file_url(url, callback, errback, default_mime_type):
                     args=(info,))
 
 def _grab_headers_using_get(url, callback, errback):
+    logging.debug("HTTPClient _grab_headers_using_get %s", url)
     options = TransferOptions(url)
     options._cancel_on_body_data = True
     transfer = CurlTransfer(options, callback, errback)
@@ -1105,6 +1159,7 @@ def _grab_headers_using_get(url, callback, errback):
     return HTTPClient(transfer)
 
 def grab_headers(url, callback, errback):
+    logging.debug("HTTPClient grab_headers %s", url)
     """Quickly get the headers for a URL"""
     def errback_intercept(error):
         if isinstance(error, AuthorizationCanceled):
@@ -1120,9 +1175,11 @@ def grab_headers(url, callback, errback):
     return HTTPClient(transfer)
 
 def init_libcurl():
+    logging.debug("HTTPClient init_libcurl")
     pycurl.global_init(pycurl.GLOBAL_ALL)
 
 def cleanup_libcurl():
+    logging.debug("HTTPClient cleanup_libcurl")
     pycurl.global_cleanup()
 
 # ON_START_HOOKS and register_on_start allow front-ends to connect
@@ -1130,12 +1187,14 @@ def cleanup_libcurl():
 ON_START_HOOKS = []
 
 def register_on_start(fun):
+    logging.debug("HTTPClient register_on_start %s", fun)
     ON_START_HOOKS.append(fun)
 
 # FIXME - this is a singleton global and the name should be all-caps
 curl_manager = None
 
 def start_thread():
+    logging.debug("HTTPClient start_thread")
     global curl_manager
     curl_manager = LibCURLManager()
     for mem in ON_START_HOOKS:
@@ -1143,6 +1202,7 @@ def start_thread():
     curl_manager.start()
 
 def stop_thread():
+    logging.debug("HTTPClient stop_thread")
     global curl_manager
     curl_manager.stop()
     curl_manager = None
