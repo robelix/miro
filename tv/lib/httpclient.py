@@ -527,7 +527,6 @@ class CurlTransfer(object):
         self.proxy_auth = httpauth.find_http_auth(_proxy_auth_url())
 
     def _setup_http_auth(self):
-        logging.debug("CurlTransfer _setup_http_auth %s", self.options.url)
         if self.http_auth is not None:
             if self.http_auth.scheme == 'basic':
                 self.handle.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_BASIC)
@@ -542,7 +541,6 @@ class CurlTransfer(object):
                         self.http_auth.password)))
 
     def _setup_proxy_auth(self):
-        logging.debug("CurlTransfer _setup_proxy_auth %s", self.options.url)
         # first try passwords stored by miro.  proxy_auth was setup in
         # _lookup_auth()
         if self.proxy_auth is not None:
@@ -555,7 +553,6 @@ class CurlTransfer(object):
                 self.handle.setopt(pycurl.PROXYUSERPWD, '%s:%s' % (
                     str(app.config.get(prefs.HTTP_PROXY_AUTHORIZATION_USERNAME)),
                     str(app.config.get(prefs.HTTP_PROXY_AUTHORIZATION_PASSWORD))))
-        logging.debug("CurlTransfer _setup_proxy_auth END %s", self.options.url)
 
     def _call_content_check(self, data):
         logging.debug("CurlTransfer _call_content_check %s", self.options.url)
@@ -602,7 +599,6 @@ class CurlTransfer(object):
 
 
     def header_func(self, line):
-        logging.debug("CurlTransfer header_func %s", line)
         line = line.strip()
         if line.startswith("HTTP"):
             # we can't use self.header.getinfo() because we're inside the
@@ -842,7 +838,6 @@ class CurlTransfer(object):
         self.call_errback(error)
 
     def call_callback(self, info):
-        logging.debug("CurlTransfer call_callback %s", info)
         self._cleanup_filehandle()
         msg = 'curl transfer callback: %s' % (self.callback,)
         eventloop.add_idle(self.callback, msg, args=(info,))
@@ -860,7 +855,6 @@ class CurlTransfer(object):
             self._filehandle = None
 
     def build_stats(self):
-        logging.debug("CurlTransfer build_stats %s", self.options.url)
         stats = TransferStats()
         getinfo = self.handle.getinfo # for easy typing
 
@@ -875,11 +869,9 @@ class CurlTransfer(object):
         stats.status_code = self.status_code
         stats.initial_size = self.resume_from
 
-        logging.debug("CurlTransfer build_stats END %s", self.options.url)
         return stats
 
     def update_stats(self):
-        logging.debug("CurlTransfer update_stats %s", self.options.url)
         new_stats = self.build_stats()
         self.lock.acquire()
         try:
