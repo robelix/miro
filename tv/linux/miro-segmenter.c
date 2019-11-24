@@ -93,7 +93,7 @@ static AVStream *add_output_stream(AVFormatContext *output_format_context, AVStr
             output_codec_context->has_b_frames = input_codec_context->has_b_frames;
 
             if (output_format_context->oformat->flags & AVFMT_GLOBALHEADER) {
-                output_codec_context->flags |= CODEC_FLAG_GLOBAL_HEADER;
+                output_codec_context->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
             }
             break;
     default:
