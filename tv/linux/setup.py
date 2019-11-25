@@ -423,24 +423,6 @@ class miro_install_data(install_data):
         self.install_app_config()
 
 class miro_build(build):
-    def build_segmenter(self):
-        segmenter_src = os.path.join(platform_dir, 'miro-segmenter.c')
-        cc = ccompiler.new_compiler()
-        cc.add_library('avutil')
-        cc.add_library('avformat')
-        cc.add_library('avcodec')
-        # Fedora places ffmpeg include into this directory rather than
-        # root /usr/include.
-        cc.add_include_dir('/usr/include/ffmpeg')
-        output_dir = os.path.join(self.build_base, 'miro-segmenter')
-        segmenter_objs = cc.compile([segmenter_src],
-                                    output_dir=output_dir,
-                                    extra_preargs=(os.environ.get("CFLAGS") or "").split())
-        cc.link_executable(segmenter_objs, 'miro-segmenter',
-                           output_dir=output_dir)
-        segmenter_exe = os.path.join(output_dir, 'miro-segmenter')
-        self.distribution.scripts.append(segmenter_exe)
-
     def build_echoprint_codegen(self):
         subprocess.check_call('/usr/bin/make', cwd=echoprint_src_dir)
         src_binary = os.path.join(echoprint_dir, 'echoprint-codegen')
@@ -458,7 +440,6 @@ class miro_build(build):
             self.distribution.scripts.append(path)
 
     def run(self):
-        self.build_segmenter()
         self.build_echoprint_codegen()
         self.build_enmfp_codegen()
         build.run(self)

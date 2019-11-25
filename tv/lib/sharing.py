@@ -54,7 +54,6 @@ from miro import fileutil
 from miro import util
 from miro import schema
 from miro import storedatabase
-from miro import transcode
 from miro import metadata
 from miro.data import mappings
 from miro.data import itemtrack
@@ -1459,8 +1458,6 @@ class SharingManagerBackend(object):
 
     def __init__(self):
         self.data_set = _SharedDataSet()
-        self.transcode_lock = threading.Lock()
-        self.transcode = dict()
         self.in_shutdown = False
 
     # Reserved for future use: you can register new sharing protocols here.
@@ -1503,77 +1500,12 @@ class SharingManagerBackend(object):
         # with it later on.
         daapitem = self.data_set.get_item(itemid)
         path = daapitem['path']
-        if ext in ('ts', 'm3u8'):
-            # If we are requesting a playlist, this basically means that
-            # transcode is required.
-            old_transcode_obj = None
-            need_create = False
-            with self.transcode_lock:
-                if self.in_shutdown:
-                    return no_file
-                try:
-                    transcode_obj = self.transcode[session]
-                    if transcode_obj.itemid != itemid:
-                        need_create = True
-                        old_transcode_obj = transcode_obj
-                    else:
-                        # This request has already been satisfied by a more
-                        # recent request.  Bye ...
-                        if generation < transcode_obj.generation:
-                            logging.debug('item %s transcode out of order',
-                                          itemid)
-                            return no_file
-                        if chunk is not None and transcode_obj.isseek(chunk):
-                            need_create = True
-                            old_transcode_obj = transcode_obj
-                except KeyError:
-                    need_create = True
-                if need_create:
-                    yes, info = transcode.needs_transcode(path)
-                    transcode_obj = transcode.TranscodeObject(
-                                                          path,
-                                                          itemid,
-                                                          generation,
-                                                          chunk,
-                                                          info,
-                                                          request_path_func)
-                self.transcode[session] = transcode_obj
-
-            # If there was an old object, shut it down.  Do it outside the
-            # loop so that we don't hold onto the transcode lock for excessive
-            # time
-            if old_transcode_obj:
-                old_transcode_obj.shutdown()
-            if need_create:
-                transcode_obj.transcode()
-
-            if ext == 'm3u8':
-                file_obj = transcode_obj.get_playlist()
-                file_obj.seek(offset, os.SEEK_SET)
-            elif ext == 'ts':
-                file_obj = transcode_obj.get_chunk()
-            else:
-                # Should this be a ValueError instead?  But returning -1
-                # will make the caller return 404.
-                logging.warning('error: transcode should be one of ts or m3u8')
-        elif ext == 'coverart':
+        if ext == 'coverart':
             try:
                 cover_art = daapitem['cover_art']
                 if cover_art:
                     file_obj = open(cover_art, 'rb')
                     file_obj.seek(offset, os.SEEK_SET)
-            except OSError:
-                if file_obj:
-                    file_obj.close()
-        else:
-            # If there is an outstanding job delete it first.
-            try:
-                del self.transcode[session]
-            except KeyError:
-                pass
-            try:
-                file_obj = open(path, 'rb')
-                file_obj.seek(offset, os.SEEK_SET)
             except OSError:
                 if file_obj:
                     file_obj.close()
@@ -1611,25 +1543,6 @@ class SharingManagerBackend(object):
         """
         return self.data_set.get_items(playlist_id)
 
-    def finished_callback(self, session):
-        # Like shutdown but only shuts down one of the sessions.  No need to
-        # set shutdown.   XXX - could race - if we terminate control connection
-        # and and reach here, before a transcode job arrives.  Then the
-        # transcode job gets created anyway.
-        with self.transcode_lock:
-            try:
-                self.transcode[session].shutdown()
-            except KeyError:
-                pass
-
-    def shutdown(self):
-        # Set the in_shutdown flag inside the transcode lock to ensure that
-        # the transcode object synchronization gate in get_file() does not
-        # waste time creating any more objects after this flag is set.
-        with self.transcode_lock:
-            self.in_shutdown = True
-            for key in self.transcode.keys():
-                self.transcode[key].shutdown()
 
 class SharingManager(object):
     """SharingManager is the sharing server.  It publishes Miro media items
@@ -1785,10 +1698,6 @@ class SharingManager(object):
 
         self.sharing_set_complete(sharing)
  
-    def finished_callback(self, session):
-        eventloop.add_idle(lambda: self.backend.finished_callback(session),
-                           'daap logout notification')
-
     def get_address(self):
         server_address = (None, None)
         try:
@@ -1913,10 +1822,6 @@ class SharingManager(object):
         if not self.server:
             self.sharing = False
             return
-
-        self.server.set_finished_callback(self.finished_callback)
-        self.server.set_log_message_callback(
-            lambda format, *args: logging.info(format, *args))
 
         self.thread = threading.Thread(target=thread_body,
                                        args=[self.server_thread],

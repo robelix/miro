@@ -342,11 +342,6 @@ def register_exec_prefix():
     global miro_exec_prefix
     miro_exec_prefix = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-def get_segmenter_executable_path():
-    # NB: Since this was installed using distutils this should give the right
-    # path.
-    return os.path.join(miro_exec_prefix, 'miro-segmenter')
-
 def get_echoprint_executable_path():
     # NB: Since this was installed using distutils this should give the right
     # path.
@@ -361,16 +356,6 @@ def get_enmfp_executable_info():
     return {
         'path': os.path.join(miro_exec_prefix, filename)
     }
-
-def get_transcode_video_options():   
-    # Linux ffmpeg may not have fancy pants encoders so leave to use default.
-    has_video_args = []
-    return has_video_args
-
-def get_transcode_audio_options():
-    # Linux ffmpeg may not have fancy pants encoders so leave to use default.
-    has_audio_args = []
-    return has_audio_args
 
 ffmpeg_version = None
 
