@@ -260,10 +260,10 @@ int main(int argc, char **argv)
 #else
         if (packet.stream_index == video_index && (packet.flags & PKT_FLAG_KEY)) {
 #endif
-            segment_time = (double)video_st->pts.val * video_st->time_base.num / video_st->time_base.den;
+            segment_time = (double)video_st->priv_pts.val * video_st->time_base.num / video_st->time_base.den;
         }
         else if (video_index < 0) {
-            segment_time = (double)audio_st->pts.val * audio_st->time_base.num / audio_st->time_base.den;
+            segment_time = (double)audio_st->priv_pts.val * audio_st->time_base.num / audio_st->time_base.den;
         }
         else {
             segment_time = prev_segment_time;
