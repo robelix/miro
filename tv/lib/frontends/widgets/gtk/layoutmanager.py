@@ -309,7 +309,8 @@ class TextBox(object):
             line = self.layout.get_line_readonly(i)
             extents = line.get_pixel_extents()[1]
             next_line_height = line_height + extents[3]
-            if next_line_height > height:
+            # not really an idea why, but it no longer shows several texts without the +1
+            if next_line_height > height+1:
                 break
             if alignment == pango.ALIGN_CENTER:
                 line_x = max(x, x + (width - extents[2]) / 2.0)
